@@ -14,7 +14,268 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      absences: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          type: Database["public"]["Enums"]["absence_type"]
+          updated_at: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date: string
+          type: Database["public"]["Enums"]["absence_type"]
+          updated_at?: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          type?: Database["public"]["Enums"]["absence_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absences_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          reason: string | null
+          record_id: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          reason?: string | null
+          record_id: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          reason?: string | null
+          record_id?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      collaborators: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          status: Database["public"]["Enums"]["collaborator_status"]
+          team: Database["public"]["Enums"]["team"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          status?: Database["public"]["Enums"]["collaborator_status"]
+          team: Database["public"]["Enums"]["team"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          status?: Database["public"]["Enums"]["collaborator_status"]
+          team?: Database["public"]["Enums"]["team"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      holidays: {
+        Row: {
+          day: number
+          id: string
+          is_national: boolean
+          month: number | null
+          name: string
+          year: number
+        }
+        Insert: {
+          day: number
+          id?: string
+          is_national?: boolean
+          month?: number | null
+          name: string
+          year: number
+        }
+        Update: {
+          day?: number
+          id?: string
+          is_national?: boolean
+          month?: number | null
+          name?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_shifts: {
+        Row: {
+          atendimento_collaborator_id: string | null
+          created_at: string
+          day_type: Database["public"]["Enums"]["day_type"]
+          end_time: string
+          id: string
+          infra_collaborator_id: string | null
+          schedule_id: string
+          shift_date: string
+          shift_type: Database["public"]["Enums"]["shift_type"]
+          sre_collaborator_id: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          atendimento_collaborator_id?: string | null
+          created_at?: string
+          day_type: Database["public"]["Enums"]["day_type"]
+          end_time: string
+          id?: string
+          infra_collaborator_id?: string | null
+          schedule_id: string
+          shift_date: string
+          shift_type: Database["public"]["Enums"]["shift_type"]
+          sre_collaborator_id?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          atendimento_collaborator_id?: string | null
+          created_at?: string
+          day_type?: Database["public"]["Enums"]["day_type"]
+          end_time?: string
+          id?: string
+          infra_collaborator_id?: string | null
+          schedule_id?: string
+          shift_date?: string
+          shift_type?: Database["public"]["Enums"]["shift_type"]
+          sre_collaborator_id?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_shifts_atendimento_collaborator_id_fkey"
+            columns: ["atendimento_collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_shifts_infra_collaborator_id_fkey"
+            columns: ["infra_collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_shifts_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_shifts_sre_collaborator_id_fkey"
+            columns: ["sre_collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_date: string
+          id: string
+          start_date: string
+          status: Database["public"]["Enums"]["schedule_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +284,20 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      absence_type:
+        | "ferias"
+        | "atestado_medico"
+        | "licenca_medica"
+        | "licenca_maternidade"
+        | "licenca_paternidade"
+        | "folga_programada"
+        | "outros"
+      app_role: "admin" | "gestor" | "visualizador"
+      collaborator_status: "active" | "inactive"
+      day_type: "dia_util" | "fim_de_semana" | "feriado"
+      schedule_status: "draft" | "published"
+      shift_type: "diurno" | "noturno"
+      team: "infra" | "sre" | "atendimento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +424,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      absence_type: [
+        "ferias",
+        "atestado_medico",
+        "licenca_medica",
+        "licenca_maternidade",
+        "licenca_paternidade",
+        "folga_programada",
+        "outros",
+      ],
+      app_role: ["admin", "gestor", "visualizador"],
+      collaborator_status: ["active", "inactive"],
+      day_type: ["dia_util", "fim_de_semana", "feriado"],
+      schedule_status: ["draft", "published"],
+      shift_type: ["diurno", "noturno"],
+      team: ["infra", "sre", "atendimento"],
+    },
   },
 } as const
