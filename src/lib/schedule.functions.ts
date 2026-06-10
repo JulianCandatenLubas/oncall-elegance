@@ -176,6 +176,96 @@ export const generateSchedule = createServerFn({ method: "POST" })
     return schedule;
   });
 
+export const deleteSchedule = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prev } = await supabase.from("schedules").select("*").eq("id", data.id).single();
+    const { error } = await supabase.from("schedules").delete().eq("id", data.id);
+    if (error) throw error;
+    await supabase.from("audit_logs").insert({
+      table_name: "schedules",
+      record_id: data.id,
+      action: "delete",
+      old_data: prev,
+      user_id: userId,
+    });
+    return { success: true };
+  });
+
+export const updateScheduleStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; status: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prev } = await supabase.from("schedules").select("*").eq("id", data.id).single();
+    const { data: result, error } = await supabase
+      .from("schedules")
+      .update({ status: data.status as "draft" | "published" })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw error;
+    await supabase.from("audit_logs").insert({
+      table_name: "schedules",
+      record_id: data.id,
+      action: "update",
+      old_data: prev,
+      new_data: result,
+      user_id: userId,
+    });
+    return result;
+  });
+
+export const updateScheduleShift = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    id: string;
+    infra_collaborator_id: string | null;
+    sre_collaborator_id: string | null;
+    atendimento_collaborator_id: string | null;
+    reason?: string;
+  }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prev } = await supabase.from("schedule_shifts").select("*").eq("id", data.id).single();
+    const { data: result, error } = await supabase
+      .from("schedule_shifts")
+      .update({
+        infra_collaborator_id: data.infra_collaborator_id,
+        sre_collaborator_id: data.sre_collaborator_id,
+        atendimento_collaborator_id: data.atendimento_collaborator_id,
+      })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw error;
+    await supabase.from("audit_logs").insert({
+      table_name: "schedule_shifts",
+      record_id: data.id,
+      action: "update",
+      old_data: prev,
+      new_data: result,
+      user_id: userId,
+      reason: data.reason,
+    });
+    return result;
+  });
+
+export const getAuditLogs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return data ?? [];
+  });
+
 export const getCurrentUserProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
