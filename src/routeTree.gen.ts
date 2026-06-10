@@ -16,6 +16,7 @@ import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
 import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -52,10 +53,16 @@ const AuthenticatedAusenciasRoute = AuthenticatedAusenciasRouteImport.update({
   path: '/ausencias',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/ausencias': typeof AuthenticatedAusenciasRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -84,6 +93,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
     | '/dashboard'
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
     | '/dashboard'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/auditoria'
     | '/_authenticated/ausencias'
     | '/_authenticated/colaboradores'
     | '/_authenticated/dashboard'
@@ -164,10 +176,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAusenciasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedAusenciasRoute: typeof AuthenticatedAusenciasRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -175,6 +195,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedAusenciasRoute: AuthenticatedAusenciasRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
