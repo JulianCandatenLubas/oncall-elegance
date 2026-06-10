@@ -202,7 +202,7 @@ export const updateScheduleStatus = createServerFn({ method: "POST" })
     const { data: prev } = await supabase.from("schedules").select("*").eq("id", data.id).single();
     const { data: result, error } = await supabase
       .from("schedules")
-      .update({ status: data.status as "draft" | "published" | "archived" })
+      .update({ status: data.status as "draft" | "published" })
       .eq("id", data.id)
       .select()
       .single();
