@@ -79,14 +79,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "EscalaPlantão — Gestão de escalas de plantão para times de TI" },
+      { name: "description", content: "Plataforma para gestão de colaboradores, ausências e geração automática de escalas de plantão para times de Infra, SRE e Atendimento." },
+      { name: "author", content: "EscalaPlantão" },
+      { property: "og:title", content: "EscalaPlantão — Gestão de escalas de plantão" },
+      { property: "og:description", content: "Gere e administre escalas de plantão automaticamente, com controle de ausências e auditoria." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "EscalaPlantão — Gestão de escalas de plantão" },
+      { name: "twitter:description", content: "Gere e administre escalas de plantão automaticamente, com controle de ausências e auditoria." },
     ],
     links: [
       {
