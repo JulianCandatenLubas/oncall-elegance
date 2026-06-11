@@ -183,10 +183,10 @@ function ColaboradoresPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered?.map((c) => (
+              {filtered?.map((c: any) => (
                 <tr key={c.id} className="border-b border-border/50 last:border-0">
                   <td className="px-4 py-3 font-medium">{c.full_name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{c.email ?? "—"}</td>
                   <td className="px-4 py-3">
                     <Badge variant="secondary" className="capitalize">
                       {c.team}
