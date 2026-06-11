@@ -107,21 +107,22 @@ export const deleteAbsence = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const getSchedules = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("schedules")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-});
+export const getSchedules = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("schedules")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
 export const getScheduleShifts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: { schedule_id: string }) => input)
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await supabaseAdmin
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase
       .from("schedule_shifts")
       .select("*, infra:infra_collaborator_id(full_name), sre:sre_collaborator_id(full_name), atendimento:atendimento_collaborator_id(full_name)")
       .eq("schedule_id", data.schedule_id)
