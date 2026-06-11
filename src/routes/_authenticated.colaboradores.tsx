@@ -140,7 +140,7 @@ function ColaboradoresPage() {
 
   const filtered = collaborators?.filter((c) =>
     c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
+    (c.email?.toLowerCase().includes(search.toLowerCase()) ?? false)
   );
 
   return (

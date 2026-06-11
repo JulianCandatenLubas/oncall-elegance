@@ -2,15 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateShifts, type ShiftAssignment } from "./schedule.utils";
 
-export const getCollaborators = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("collaborators")
-    .select("*")
-    .order("full_name");
-  if (error) throw error;
-  return data ?? [];
-});
+export const getCollaborators = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).single();
+    const isPrivileged = profile?.role === "admin" || profile?.role === "gestor";
+    const query = isPrivileged
+      ? supabase.from("collaborators").select("*")
+      : supabase.from("collaborators").select("id, full_name, team, status, created_at, updated_at");
+    const { data, error } = await query.order("full_name");
+    if (error) throw error;
+    return (data ?? []) as Array<{ id: string; full_name: string; email?: string; team: string; status: string; created_at: string; updated_at: string }>;
+  });
 
 export const createCollaborator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -61,15 +65,17 @@ export const deleteCollaborator = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const getAbsences = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("absences")
-    .select("*, collaborators(full_name)")
-    .order("start_date", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-});
+export const getAbsences = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("absences")
+      .select("*, collaborators(full_name)")
+      .order("start_date", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
 export const createAbsence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -101,21 +107,22 @@ export const deleteAbsence = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const getSchedules = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("schedules")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-});
+export const getSchedules = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("schedules")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
 export const getScheduleShifts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: { schedule_id: string }) => input)
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: result, error } = await supabaseAdmin
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase
       .from("schedule_shifts")
       .select("*, infra:infra_collaborator_id(full_name), sre:sre_collaborator_id(full_name), atendimento:atendimento_collaborator_id(full_name)")
       .eq("schedule_id", data.schedule_id)
@@ -279,8 +286,10 @@ export const getCurrentUserProfile = createServerFn({ method: "GET" })
     return profile;
   });
 
-export const getDashboardStats = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+export const getDashboardStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = context.supabase;
 
   const today = new Date().toISOString().split("T")[0];
 
