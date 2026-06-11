@@ -2,15 +2,22 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateShifts, type ShiftAssignment } from "./schedule.utils";
 
-export const getCollaborators = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("collaborators")
-    .select("*")
-    .order("full_name");
-  if (error) throw error;
-  return data ?? [];
-});
+export const getCollaborators = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).single();
+    const isPrivileged = profile?.role === "admin" || profile?.role === "gestor";
+    const columns = isPrivileged
+      ? "*"
+      : "id, full_name, team, status, created_at, updated_at";
+    const { data, error } = await supabase
+      .from("collaborators")
+      .select(columns)
+      .order("full_name");
+    if (error) throw error;
+    return data ?? [];
+  });
 
 export const createCollaborator = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
