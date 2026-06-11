@@ -8,15 +8,12 @@ export const getCollaborators = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).single();
     const isPrivileged = profile?.role === "admin" || profile?.role === "gestor";
-    const columns = isPrivileged
-      ? "*"
-      : "id, full_name, team, status, created_at, updated_at";
-    const { data, error } = await supabase
-      .from("collaborators")
-      .select(columns)
-      .order("full_name");
+    const query = isPrivileged
+      ? supabase.from("collaborators").select("*")
+      : supabase.from("collaborators").select("id, full_name, team, status, created_at, updated_at");
+    const { data, error } = await query.order("full_name");
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []) as Array<{ id: string; full_name: string; email?: string; team: string; status: string; created_at: string; updated_at: string }>;
   });
 
 export const createCollaborator = createServerFn({ method: "POST" })
