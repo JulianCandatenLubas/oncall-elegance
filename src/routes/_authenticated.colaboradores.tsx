@@ -138,9 +138,9 @@ function ColaboradoresPage() {
     setIsDialogOpen(true);
   }
 
-  const filtered = collaborators?.filter((c) =>
+  const filtered = collaborators?.filter((c: any) =>
     c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.email?.toLowerCase().includes(search.toLowerCase()) ?? false)
+    (c.email?.toLowerCase?.().includes(search.toLowerCase()) ?? false)
   );
 
   return (
