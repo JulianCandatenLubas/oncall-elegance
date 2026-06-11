@@ -65,15 +65,17 @@ export const deleteCollaborator = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-export const getAbsences = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("absences")
-    .select("*, collaborators(full_name)")
-    .order("start_date", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-});
+export const getAbsences = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("absences")
+      .select("*, collaborators(full_name)")
+      .order("start_date", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
 export const createAbsence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
