@@ -286,8 +286,10 @@ export const getCurrentUserProfile = createServerFn({ method: "GET" })
     return profile;
   });
 
-export const getDashboardStats = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+export const getDashboardStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = context.supabase;
 
   const today = new Date().toISOString().split("T")[0];
 
