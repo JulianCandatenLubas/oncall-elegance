@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   FileText,
+  KeyRound,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Ausências", to: "/ausencias", icon: CalendarOff },
   { label: "Escalas", to: "/escalas", icon: CalendarDays },
   { label: "Auditoria", to: "/auditoria", icon: FileText },
+  { label: "Acessos", to: "/acessos", icon: KeyRound },
 ];
 
 function AuthenticatedLayout() {
