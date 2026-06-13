@@ -150,25 +150,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          is_collaborator: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          active?: boolean
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
+          is_collaborator?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          active?: boolean
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_collaborator?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -299,7 +311,7 @@ export type Database = {
         | "licenca_paternidade"
         | "folga_programada"
         | "outros"
-      app_role: "admin" | "gestor" | "visualizador"
+      app_role: "admin" | "gestor" | "visualizador" | "editor"
       collaborator_status: "active" | "inactive"
       day_type: "dia_util" | "fim_de_semana" | "feriado"
       schedule_status: "draft" | "published"
@@ -441,7 +453,7 @@ export const Constants = {
         "folga_programada",
         "outros",
       ],
-      app_role: ["admin", "gestor", "visualizador"],
+      app_role: ["admin", "gestor", "visualizador", "editor"],
       collaborator_status: ["active", "inactive"],
       day_type: ["dia_util", "fim_de_semana", "feriado"],
       schedule_status: ["draft", "published"],

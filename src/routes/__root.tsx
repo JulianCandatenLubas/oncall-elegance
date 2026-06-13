@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureProfile } from "@/lib/access.functions";
 
 function NotFoundComponent() {
   return (
@@ -123,6 +124,9 @@ function RootComponent() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        if (event === "SIGNED_IN") {
+          ensureProfile().catch((e) => console.error("ensureProfile failed", e));
+        }
         router.invalidate();
       }
     });
