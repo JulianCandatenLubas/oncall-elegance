@@ -150,25 +150,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          is_collaborator: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          active?: boolean
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
+          is_collaborator?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          active?: boolean
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_collaborator?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
