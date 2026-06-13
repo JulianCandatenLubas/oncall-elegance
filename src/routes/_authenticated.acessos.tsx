@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,8 +32,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Search, ShieldCheck, Lock } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ShieldCheck, Lock, Check, Minus } from "lucide-react";
+import {
+  listAccessUsers,
+  inviteAccessUser,
+  updateAccessUser,
+  deleteAccessUser,
+} from "@/lib/access.functions";
 
 export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
@@ -42,151 +51,161 @@ type AccessUser = {
   id: string;
   full_name: string;
   email: string;
-  role: Perfil | "admin";
+  role: string;
+  whatsapp: string | null;
+  is_collaborator: boolean;
   active: boolean;
-  locked?: boolean;
 };
 
-const ADMIN_USER: AccessUser = {
-  id: "admin-fixed",
-  full_name: "Julian Candaten Lubas",
-  email: "juliancandatenlubas@gmail.com",
-  role: "admin",
-  active: true,
-  locked: true,
-};
-
-const INITIAL_USERS: AccessUser[] = [
-  {
-    id: "u-1",
-    full_name: "Mariana Silva",
-    email: "mariana.silva@empresa.com",
-    role: "editor",
-    active: true,
-  },
-  {
-    id: "u-2",
-    full_name: "Rafael Costa",
-    email: "rafael.costa@empresa.com",
-    role: "visualizador",
-    active: true,
-  },
-  {
-    id: "u-3",
-    full_name: "Beatriz Almeida",
-    email: "beatriz.almeida@empresa.com",
-    role: "visualizador",
-    active: false,
-  },
-];
-
-const perfilLabel: Record<Perfil | "admin", string> = {
+const ADMIN_ID = "d81cd53e-f6c7-4f5d-9bbc-285cf23fcd88";
+const perfilLabel: Record<string, string> = {
   admin: "Admin",
   editor: "Editor",
+  gestor: "Editor",
   visualizador: "Visualizador",
 };
 
+function maskPhone(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
 function AcessosPage() {
-  const [users, setUsers] = useState<AccessUser[]>(INITIAL_USERS);
+  const qc = useQueryClient();
+  const listFn = useServerFn(listAccessUsers);
+  const inviteFn = useServerFn(inviteAccessUser);
+  const updateFn = useServerFn(updateAccessUser);
+  const deleteFn = useServerFn(deleteAccessUser);
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["access-users"],
+    queryFn: () => listFn(),
+  });
+
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AccessUser | null>(null);
   const [toDelete, setToDelete] = useState<AccessUser | null>(null);
-  const [form, setForm] = useState<{ full_name: string; email: string; role: Perfil }>({
-    full_name: "",
-    email: "",
-    role: "visualizador",
+  const [form, setForm] = useState<{
+    full_name: string;
+    email: string;
+    role: Perfil;
+    whatsapp: string;
+    is_collaborator: "yes" | "no" | "";
+  }>({ full_name: "", email: "", role: "visualizador", whatsapp: "", is_collaborator: "" });
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["access-users"] });
+
+  const inviteMut = useMutation({
+    mutationFn: (data: any) => inviteFn({ data }),
+    onSuccess: () => {
+      toast.success("Convite enviado por e-mail");
+      setDialogOpen(false);
+      refresh();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Falha ao enviar convite"),
   });
+  const updateMut = useMutation({
+    mutationFn: (data: any) => updateFn({ data }),
+    onSuccess: () => {
+      refresh();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Falha ao atualizar"),
+  });
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Usuário excluído");
+      setToDelete(null);
+      refresh();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Falha ao excluir"),
+  });
+
+  const sortedUsers = useMemo<AccessUser[]>(() => {
+    const list = [...(users as AccessUser[])];
+    list.sort((a, b) => {
+      if (a.id === ADMIN_ID) return -1;
+      if (b.id === ADMIN_ID) return 1;
+      return a.full_name.localeCompare(b.full_name);
+    });
+    return list;
+  }, [users]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return users;
-    return users.filter(
-      (u) =>
-        u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
-    );
-  }, [users, search]);
+    return sortedUsers.filter((u) => {
+      if (u.id === ADMIN_ID) return true;
+      if (!q) return true;
+      return (
+        u.full_name.toLowerCase().includes(q) || (u.email ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [sortedUsers, search]);
 
   function openCreate() {
     setEditing(null);
-    setForm({ full_name: "", email: "", role: "visualizador" });
+    setForm({
+      full_name: "",
+      email: "",
+      role: "visualizador",
+      whatsapp: "",
+      is_collaborator: "",
+    });
     setDialogOpen(true);
   }
 
   function openEdit(user: AccessUser) {
-    if (user.locked) return;
+    if (user.id === ADMIN_ID) return;
     setEditing(user);
     setForm({
       full_name: user.full_name,
-      email: user.email,
-      role: user.role === "admin" ? "editor" : user.role,
+      email: user.email ?? "",
+      role: (user.role === "admin" ? "editor" : (user.role as Perfil)) || "visualizador",
+      whatsapp: user.whatsapp ?? "",
+      is_collaborator: user.is_collaborator ? "yes" : "no",
     });
     setDialogOpen(true);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.full_name.trim() || !form.email.trim()) {
-      toast.error("Preencha nome e e-mail");
-      return;
-    }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
-      toast.error("E-mail inválido");
-      return;
-    }
-    if (form.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) {
-      toast.error("Este e-mail é reservado ao administrador");
-      return;
-    }
+    if (!form.full_name.trim()) return toast.error("Informe o nome");
+    if (!form.email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email))
+      return toast.error("E-mail inválido");
+    if (form.is_collaborator === "") return toast.error('Selecione "É colaborador?"');
+
+    const whatsapp = form.whatsapp.trim() || null;
+    const is_collaborator = form.is_collaborator === "yes";
 
     if (editing) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editing.id
-            ? { ...u, full_name: form.full_name, email: form.email, role: form.role }
-            : u,
-        ),
-      );
-      toast.success("Usuário atualizado");
+      updateMut.mutate({
+        id: editing.id,
+        full_name: form.full_name,
+        role: form.role,
+        whatsapp,
+        is_collaborator,
+      });
+      toast.success("Alterações salvas");
+      setDialogOpen(false);
     } else {
-      const exists = users.some(
-        (u) => u.email.toLowerCase() === form.email.toLowerCase(),
-      );
-      if (exists) {
-        toast.error("Já existe um usuário com este e-mail");
-        return;
-      }
-      setUsers((prev) => [
-        ...prev,
-        {
-          id: `u-${Date.now()}`,
-          full_name: form.full_name,
-          email: form.email,
-          role: form.role,
-          active: true,
-        },
-      ]);
-      toast.success("Usuário convidado");
+      inviteMut.mutate({
+        full_name: form.full_name,
+        email: form.email,
+        role: form.role,
+        whatsapp,
+        is_collaborator,
+        redirect_to: `${window.location.origin}/definir-senha`,
+      });
     }
-    setDialogOpen(false);
   }
 
-  function toggleActive(user: AccessUser) {
-    if (user.locked) return;
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? { ...u, active: !u.active } : u)),
-    );
-    toast.success(user.active ? "Usuário desativado" : "Usuário ativado");
+  function toggleActive(user: AccessUser, next: boolean) {
+    if (user.id === ADMIN_ID) return;
+    updateMut.mutate({ id: user.id, active: next });
   }
-
-  function confirmDelete() {
-    if (!toDelete || toDelete.locked) return;
-    setUsers((prev) => prev.filter((u) => u.id !== toDelete.id));
-    toast.success("Usuário excluído");
-    setToDelete(null);
-  }
-
-  const rows: AccessUser[] = [ADMIN_USER, ...filtered];
 
   return (
     <div className="space-y-6">
@@ -220,90 +239,112 @@ function AcessosPage() {
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Nome completo</th>
                 <th className="px-4 py-3 font-medium">E-mail</th>
+                <th className="px-4 py-3 font-medium">WhatsApp</th>
                 <th className="px-4 py-3 font-medium">Perfil</th>
+                <th className="px-4 py-3 font-medium">Colaborador</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((u) => (
-                <tr
-                  key={u.id}
-                  className={`border-b border-border/50 last:border-0 ${
-                    u.locked ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <td className="px-4 py-3 font-medium">
-                    <div className="flex items-center gap-2">
-                      {u.locked && <ShieldCheck className="h-4 w-4 text-primary" />}
-                      {u.full_name}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                  <td className="px-4 py-3">
-                    {u.role === "admin" ? (
-                      <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary">
-                        <Lock className="h-3 w-3" />
-                        Admin
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">{perfilLabel[u.role]}</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.locked ? (
-                      <Badge
-                        variant="default"
-                        className="bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                      >
-                        Ativo
-                      </Badge>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={u.active}
-                          onCheckedChange={() => toggleActive(u)}
-                          aria-label="Ativar ou desativar usuário"
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          {u.active ? "Ativo" : "Inativo"}
-                        </span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {u.locked ? (
-                      <span className="text-xs text-muted-foreground">
-                        Conta protegida
-                      </span>
-                    ) : (
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(u)}
-                          aria-label="Editar usuário"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setToDelete(u)}
-                          aria-label="Excluir usuário"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
+              {isLoading && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    Carregando...
                   </td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
+              )}
+              {!isLoading &&
+                filtered.map((u) => {
+                  const isAdmin = u.id === ADMIN_ID;
+                  return (
+                    <tr
+                      key={u.id}
+                      className={`border-b border-border/50 last:border-0 ${
+                        isAdmin ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          {isAdmin && <ShieldCheck className="h-4 w-4 text-primary" />}
+                          {u.full_name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {u.whatsapp || "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isAdmin ? (
+                          <Badge className="gap-1 bg-primary text-primary-foreground hover:bg-primary">
+                            <Lock className="h-3 w-3" />
+                            Admin
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            {perfilLabel[u.role] ?? u.role}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {u.is_collaborator ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Minus className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isAdmin ? (
+                          <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                            Ativo
+                          </Badge>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={u.active}
+                              onCheckedChange={(v) => toggleActive(u, v)}
+                              aria-label="Ativar ou desativar usuário"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              {u.active ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {isAdmin ? (
+                          <span className="text-xs text-muted-foreground">
+                            Conta protegida
+                          </span>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEdit(u)}
+                              aria-label="Editar usuário"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setToDelete(u)}
+                              aria-label="Excluir usuário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    Nenhum usuário encontrado para a busca
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    Nenhum usuário encontrado
                   </td>
                 </tr>
               )}
@@ -319,8 +360,9 @@ function AcessosPage() {
               {editing ? "Editar usuário" : "Convidar novo usuário"}
             </DialogTitle>
             <DialogDescription>
-              Defina nome, e-mail e perfil de acesso. O perfil Admin é exclusivo da
-              conta principal.
+              {editing
+                ? "Atualize as informações do usuário."
+                : "Será enviado um e-mail com link para o usuário definir a senha (expira em 48h)."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -337,8 +379,19 @@ function AcessosPage() {
               <Input
                 type="email"
                 value={form.email}
+                disabled={!!editing}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="usuario@empresa.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>WhatsApp (opcional)</Label>
+              <Input
+                value={form.whatsapp}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, whatsapp: maskPhone(e.target.value) }))
+                }
+                placeholder="(11) 91234-5678"
               />
             </div>
             <div className="space-y-2">
@@ -360,12 +413,35 @@ function AcessosPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>É colaborador?</Label>
+              <RadioGroup
+                value={form.is_collaborator}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, is_collaborator: v as "yes" | "no" }))
+                }
+                className="flex gap-6"
+              >
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="yes" id="col-yes" />
+                  <span>Sim</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="no" id="col-no" />
+                  <span>Não</span>
+                </label>
+              </RadioGroup>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">
-                {editing ? "Salvar alterações" : "Enviar convite"}
+              <Button type="submit" disabled={inviteMut.isPending || updateMut.isPending}>
+                {editing
+                  ? "Salvar alterações"
+                  : inviteMut.isPending
+                  ? "Enviando..."
+                  : "Enviar convite"}
               </Button>
             </DialogFooter>
           </form>
@@ -385,7 +461,7 @@ function AcessosPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={() => toDelete && deleteMut.mutate(toDelete.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Excluir
