@@ -92,7 +92,7 @@ export const updateAccessUser = createServerFn({ method: "POST" })
     for (const k of ["full_name", "role", "whatsapp", "is_collaborator", "active"] as const) {
       if (data[k] !== undefined) patch[k] = data[k];
     }
-    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.id);
+    const { error } = await supabaseAdmin.from("profiles").update(patch as any).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
