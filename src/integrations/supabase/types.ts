@@ -311,7 +311,7 @@ export type Database = {
         | "licenca_paternidade"
         | "folga_programada"
         | "outros"
-      app_role: "admin" | "gestor" | "visualizador"
+      app_role: "admin" | "gestor" | "visualizador" | "editor"
       collaborator_status: "active" | "inactive"
       day_type: "dia_util" | "fim_de_semana" | "feriado"
       schedule_status: "draft" | "published"
@@ -453,7 +453,7 @@ export const Constants = {
         "folga_programada",
         "outros",
       ],
-      app_role: ["admin", "gestor", "visualizador"],
+      app_role: ["admin", "gestor", "visualizador", "editor"],
       collaborator_status: ["active", "inactive"],
       day_type: ["dia_util", "fim_de_semana", "feriado"],
       schedule_status: ["draft", "published"],
