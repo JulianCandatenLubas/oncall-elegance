@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link, useRouter, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +38,7 @@ const navItems = [
 
 function AuthenticatedLayout() {
   const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -96,7 +97,8 @@ function AuthenticatedLayout() {
               const isRestricted = item.to === "/auditoria" && !isAdminOrGestor;
               if (isRestricted) return null;
               const Icon = item.icon;
-              const active = router.state.location.pathname === item.to;
+              const active =
+                pathname === item.to || pathname.startsWith(item.to + "/");
               return (
                 <Link
                   key={item.to}
