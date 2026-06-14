@@ -100,8 +100,8 @@ function AcessosPage() {
 
   const inviteMut = useMutation({
     mutationFn: (data: any) => inviteFn({ data }),
-    onSuccess: () => {
-      toast.success("Convite enviado por e-mail");
+    onSuccess: (_res, vars: any) => {
+      toast.success(`Convite enviado com sucesso para ${vars.email}`);
       setDialogOpen(false);
       refresh();
     },
