@@ -12,6 +12,26 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso negado");
 }
 
+async function syncCollaboratorFromAccess(
+  admin: any,
+  payload: { full_name: string; email: string },
+) {
+  const email = payload.email.trim().toLowerCase();
+  if (!email) return;
+  const { data: existing } = await admin
+    .from("collaborators")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  if (existing) return;
+  await admin.from("collaborators").insert({
+    full_name: payload.full_name,
+    email,
+    team: "atendimento",
+    status: "active",
+  });
+}
+
 export const listAccessUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -69,6 +89,13 @@ export const inviteAccessUser = createServerFn({ method: "POST" })
       { onConflict: "id" },
     );
     if (upErr) throw new Error(upErr.message);
+
+    if (data.is_collaborator) {
+      await syncCollaboratorFromAccess(supabaseAdmin, {
+        full_name: data.full_name,
+        email,
+      });
+    }
     return { ok: true };
   });
 
@@ -94,6 +121,20 @@ export const updateAccessUser = createServerFn({ method: "POST" })
     }
     const { error } = await supabaseAdmin.from("profiles").update(patch as any).eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    if (data.is_collaborator === true) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (prof?.email) {
+        await syncCollaboratorFromAccess(supabaseAdmin, {
+          full_name: prof.full_name ?? "",
+          email: prof.email,
+        });
+      }
+    }
     return { ok: true };
   });
 
