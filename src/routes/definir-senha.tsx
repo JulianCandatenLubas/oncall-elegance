@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { KeyRound } from "lucide-react";
+import { traduzirErroAuth } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/definir-senha")({
   component: DefinirSenhaPage,
@@ -34,7 +35,7 @@ function DefinirSenhaPage() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(traduzirErroAuth(error.message));
     toast.success("Senha definida com sucesso");
     navigate({ to: "/dashboard" });
   }

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Shield, Mail, Chrome } from "lucide-react";
+import { traduzirErroAuth } from "@/lib/auth-errors";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -49,7 +50,7 @@ function AuthPage() {
     });
     setIsLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(traduzirErroAuth(error.message));
     } else {
       toast.success("Login realizado com sucesso");
       window.location.href = "/";
@@ -67,7 +68,7 @@ function AuthPage() {
     });
     setIsLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(traduzirErroAuth(error.message));
       return;
     }
     if (signUpData.user) {
@@ -77,7 +78,7 @@ function AuthPage() {
         role: "visualizador",
       });
       if (profileError) {
-        toast.error("Erro ao criar perfil: " + profileError.message);
+        toast.error("Erro ao criar perfil: " + traduzirErroAuth(profileError.message));
         return;
       }
     }
@@ -89,7 +90,7 @@ function AuthPage() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error(result.error.message || "Erro ao entrar com Google");
+      toast.error(traduzirErroAuth(result.error.message) || "Erro ao entrar com Google");
     }
   }
 
