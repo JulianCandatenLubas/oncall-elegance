@@ -231,6 +231,31 @@ function DashboardPage() {
           </div>
         </div>
       )}
+
+      <Dialog open={!!teamModal} onOpenChange={(o) => !o && setTeamModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Colaboradores — Time {teamModal ? teamLabel[teamModal] : ""}</DialogTitle>
+            <DialogDescription>Lista de colaboradores pertencentes ao time selecionado.</DialogDescription>
+          </DialogHeader>
+          {teamCollabs.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Nenhum colaborador encontrado para este time.
+            </p>
+          ) : (
+            <div className="max-h-96 space-y-2 overflow-y-auto">
+              {teamCollabs.map((c: any) => (
+                <div key={c.id} className="rounded-lg border border-border p-3">
+                  <p className="text-sm font-medium">{c.full_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.email || "sem e-mail"} · {c.whatsapp || "sem WhatsApp"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
