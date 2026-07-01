@@ -15,6 +15,7 @@ import {
   X,
   FileText,
   KeyRound,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Colaboradores", to: "/colaboradores", icon: Users },
   { label: "Ausências", to: "/ausencias", icon: CalendarOff },
+  { label: "Condições Especiais", to: "/condicoes-especiais", icon: Sparkles, indent: true },
   { label: "Escalas", to: "/escalas", icon: CalendarDays },
   { label: "Auditoria", to: "/auditoria", icon: FileText },
   { label: "Acessos", to: "/acessos", icon: KeyRound },
