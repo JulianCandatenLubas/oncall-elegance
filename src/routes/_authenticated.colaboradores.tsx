@@ -254,8 +254,8 @@ function ColaboradoresPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>E-mail</Label>
-              <Input type="email" {...form.register("email")} />
+              <Label>E-mail (opcional)</Label>
+              <Input type="email" placeholder="opcional" {...form.register("email")} />
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
