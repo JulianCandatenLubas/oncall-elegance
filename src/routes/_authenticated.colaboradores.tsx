@@ -113,16 +113,17 @@ function ColaboradoresPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collaborators"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Colaborador removido com sucesso");
+      toast.success("Cadastro excluído com sucesso");
     },
     onError: (err: any) => toast.error(err.message || "Erro ao remover"),
   });
 
   function onSubmit(data: CollaboratorForm) {
+    const payload = { ...data, email: data.email ? data.email : undefined };
     if (editing) {
-      updateMutation.mutate({ data: { id: editing.id, ...data } });
+      updateMutation.mutate({ data: { id: editing.id, ...payload } as any });
     } else {
-      createMutation.mutate({ data });
+      createMutation.mutate({ data: payload as any });
     }
   }
 
