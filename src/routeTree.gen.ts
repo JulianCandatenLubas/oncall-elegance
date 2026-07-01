@@ -9,22 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DefinirSenhaRouteImport } from './routes/definir-senha'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated.escalas'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedCondicoesEspeciaisRouteImport } from './routes/_authenticated.condicoes-especiais'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
 import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
+import { Route as AuthenticatedAlterarSenhaRouteImport } from './routes/_authenticated.alterar-senha'
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated.acessos'
 
-const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
-  id: '/definir-senha',
-  path: '/definir-senha',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -49,6 +45,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCondicoesEspeciaisRoute =
+  AuthenticatedCondicoesEspeciaisRouteImport.update({
+    id: '/condicoes-especiais',
+    path: '/condicoes-especiais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedColaboradoresRoute =
   AuthenticatedColaboradoresRouteImport.update({
     id: '/colaboradores',
@@ -65,6 +67,12 @@ const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
   path: '/auditoria',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAlterarSenhaRoute =
+  AuthenticatedAlterarSenhaRouteImport.update({
+    id: '/alterar-senha',
+    path: '/alterar-senha',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
   id: '/acessos',
   path: '/acessos',
@@ -74,22 +82,24 @@ const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/definir-senha': typeof DefinirSenhaRoute
   '/acessos': typeof AuthenticatedAcessosRoute
+  '/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/escalas': typeof AuthenticatedEscalasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/definir-senha': typeof DefinirSenhaRoute
   '/acessos': typeof AuthenticatedAcessosRoute
+  '/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/escalas': typeof AuthenticatedEscalasRoute
 }
@@ -98,11 +108,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
-  '/definir-senha': typeof DefinirSenhaRoute
   '/_authenticated/acessos': typeof AuthenticatedAcessosRoute
+  '/_authenticated/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/ausencias': typeof AuthenticatedAusenciasRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/escalas': typeof AuthenticatedEscalasRoute
 }
@@ -111,22 +122,24 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/definir-senha'
     | '/acessos'
+    | '/alterar-senha'
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
+    | '/condicoes-especiais'
     | '/dashboard'
     | '/escalas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/definir-senha'
     | '/acessos'
+    | '/alterar-senha'
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
+    | '/condicoes-especiais'
     | '/dashboard'
     | '/escalas'
   id:
@@ -134,11 +147,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/definir-senha'
     | '/_authenticated/acessos'
+    | '/_authenticated/alterar-senha'
     | '/_authenticated/auditoria'
     | '/_authenticated/ausencias'
     | '/_authenticated/colaboradores'
+    | '/_authenticated/condicoes-especiais'
     | '/_authenticated/dashboard'
     | '/_authenticated/escalas'
   fileRoutesById: FileRoutesById
@@ -147,18 +161,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DefinirSenhaRoute: typeof DefinirSenhaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/definir-senha': {
-      id: '/definir-senha'
-      path: '/definir-senha'
-      fullPath: '/definir-senha'
-      preLoaderRoute: typeof DefinirSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -194,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/condicoes-especiais': {
+      id: '/_authenticated/condicoes-especiais'
+      path: '/condicoes-especiais'
+      fullPath: '/condicoes-especiais'
+      preLoaderRoute: typeof AuthenticatedCondicoesEspeciaisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/colaboradores': {
       id: '/_authenticated/colaboradores'
       path: '/colaboradores'
@@ -215,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/alterar-senha': {
+      id: '/_authenticated/alterar-senha'
+      path: '/alterar-senha'
+      fullPath: '/alterar-senha'
+      preLoaderRoute: typeof AuthenticatedAlterarSenhaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/acessos': {
       id: '/_authenticated/acessos'
       path: '/acessos'
@@ -227,18 +247,22 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAcessosRoute: typeof AuthenticatedAcessosRoute
+  AuthenticatedAlterarSenhaRoute: typeof AuthenticatedAlterarSenhaRoute
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedAusenciasRoute: typeof AuthenticatedAusenciasRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedCondicoesEspeciaisRoute: typeof AuthenticatedCondicoesEspeciaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEscalasRoute: typeof AuthenticatedEscalasRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcessosRoute: AuthenticatedAcessosRoute,
+  AuthenticatedAlterarSenhaRoute: AuthenticatedAlterarSenhaRoute,
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedAusenciasRoute: AuthenticatedAusenciasRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedCondicoesEspeciaisRoute: AuthenticatedCondicoesEspeciaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEscalasRoute: AuthenticatedEscalasRoute,
 }
@@ -251,7 +275,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
-  DefinirSenhaRoute: DefinirSenhaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

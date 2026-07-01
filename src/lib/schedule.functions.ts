@@ -63,7 +63,7 @@ export const createCollaborator = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       full_name: z.string().min(2).max(200),
-      email: z.string().email().max(200),
+      email: z.string().email().max(200).optional().nullable(),
       team: collaboratorTeam,
       status: collaboratorStatus,
     }).parse,
@@ -73,7 +73,7 @@ export const createCollaborator = createServerFn({ method: "POST" })
     const admin = await getAdmin();
     const { data: result, error } = await admin
       .from("collaborators")
-      .insert({ full_name: data.full_name, email: data.email, team: data.team, status: data.status })
+      .insert({ full_name: data.full_name, email: data.email ?? null, team: data.team, status: data.status })
       .select()
       .single();
     if (error) throw error;
@@ -86,7 +86,7 @@ export const updateCollaborator = createServerFn({ method: "POST" })
     z.object({
       id: uuid,
       full_name: z.string().min(2).max(200).optional(),
-      email: z.string().email().max(200).optional(),
+      email: z.string().email().max(200).optional().nullable(),
       team: collaboratorTeam.optional(),
       status: collaboratorStatus.optional(),
     }).parse,
@@ -211,8 +211,28 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const { data: absences, error: absError } = await admin.from("absences").select("*");
     if (absError) throw absError;
 
+    const { data: restrictions, error: restError } = await admin
+      .from("collaborator_restrictions")
+      .select("collaborator_id, type, weekdays, start_date, end_date");
+    if (restError) throw restError;
+
+    const { data: priorities, error: prioError } = await admin
+      .from("collaborator_priorities")
+      .select("collaborator_id, weekdays, level");
+    if (prioError) throw prioError;
+
     const start = new Date(data.start_date);
     const end = new Date(data.end_date);
+
+    const { generateShiftsDetailed } = await import("./schedule.utils");
+    const result = generateShiftsDetailed(
+      start,
+      end,
+      collaborators ?? [],
+      absences ?? [],
+      (restrictions ?? []) as any,
+      (priorities ?? []) as any,
+    );
 
     const { data: schedule, error: schedError } = await admin
       .from("schedules")
@@ -226,9 +246,7 @@ export const generateSchedule = createServerFn({ method: "POST" })
       .single();
     if (schedError) throw schedError;
 
-    const shifts = generateShifts(start, end, collaborators ?? [], absences ?? []);
-
-    const shiftInserts = shifts.map((s) => ({
+    const shiftInserts = result.shifts.map((s: any) => ({
       schedule_id: schedule.id,
       shift_date: s.date,
       day_type: s.dayType,
@@ -243,7 +261,7 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const { error: shiftError } = await admin.from("schedule_shifts").insert(shiftInserts);
     if (shiftError) throw shiftError;
 
-    return schedule;
+    return { ...schedule, hasConsecutiveConflict: result.hasConsecutiveConflict };
   });
 
 export const deleteSchedule = createServerFn({ method: "POST" })

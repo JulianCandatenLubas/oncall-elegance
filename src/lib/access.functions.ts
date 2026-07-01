@@ -47,11 +47,13 @@ export const listAccessUsers = createServerFn({ method: "GET" })
 type InviteInput = {
   full_name: string;
   email: string;
-  role: "editor" | "visualizador";
+  role: "admin" | "editor" | "visualizador";
   whatsapp?: string | null;
   is_collaborator: boolean;
-  redirect_to: string;
+  redirect_to?: string;
 };
+
+const DEFAULT_PASSWORD = "123456";
 
 export const inviteAccessUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -64,21 +66,22 @@ export const inviteAccessUser = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: invited, error: invErr } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        data: {
-          full_name: data.full_name,
-          role: data.role,
-          whatsapp: data.whatsapp ?? null,
-          is_collaborator: data.is_collaborator,
-        },
-        redirectTo: data.redirect_to,
-      });
-    if (invErr || !invited?.user) throw new Error(invErr?.message ?? "Falha ao enviar convite");
+    const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: DEFAULT_PASSWORD,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.full_name,
+        role: data.role,
+        whatsapp: data.whatsapp ?? null,
+        is_collaborator: data.is_collaborator,
+      },
+    });
+    if (cErr || !created?.user) throw new Error(cErr?.message ?? "Falha ao criar usuário");
 
     const { error: upErr } = await supabaseAdmin.from("profiles").upsert(
       {
-        id: invited.user.id,
+        id: created.user.id,
         full_name: data.full_name,
         email,
         role: data.role,
@@ -96,13 +99,32 @@ export const inviteAccessUser = createServerFn({ method: "POST" })
         email,
       });
     }
-    return { ok: true };
+
+    // Best-effort transactional email informing default password.
+    try {
+      const site = process.env.SITE_URL ?? "";
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: {
+          data: {
+            welcome_message:
+              "Sua senha inicial é 123456. Altere-a no primeiro acesso pela tela Alterar Senha.",
+          },
+          redirectTo: site,
+        },
+      });
+    } catch {
+      // ignore
+    }
+
+    return { ok: true, default_password: DEFAULT_PASSWORD };
   });
 
 type UpdateInput = {
   id: string;
   full_name?: string;
-  role?: "editor" | "visualizador";
+  role?: "admin" | "editor" | "visualizador";
   whatsapp?: string | null;
   is_collaborator?: boolean;
   active?: boolean;

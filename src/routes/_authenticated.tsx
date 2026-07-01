@@ -15,6 +15,7 @@ import {
   X,
   FileText,
   KeyRound,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Colaboradores", to: "/colaboradores", icon: Users },
   { label: "Ausências", to: "/ausencias", icon: CalendarOff },
+  { label: "Condições Especiais", to: "/condicoes-especiais", icon: Sparkles, indent: true },
   { label: "Escalas", to: "/escalas", icon: CalendarDays },
   { label: "Auditoria", to: "/auditoria", icon: FileText },
   { label: "Acessos", to: "/acessos", icon: KeyRound },
@@ -104,6 +106,8 @@ function AuthenticatedLayout() {
                   key={item.to}
                   to={item.to}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    (item as any).indent ? "ml-6" : ""
+                  } ${
                     active
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -127,6 +131,14 @@ function AuthenticatedLayout() {
                 <p className="text-xs text-muted-foreground capitalize">{profile?.role ?? "visualizador"}</p>
               </div>
             </div>
+            <Link
+              to="/alterar-senha"
+              onClick={() => setMobileOpen(false)}
+              className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <KeyRound className="h-4 w-4" />
+              Alterar senha
+            </Link>
             <button
               onClick={handleLogout}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

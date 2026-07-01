@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getDashboardStats, getSchedules, getScheduleShifts } from "@/lib/schedule.functions";
+import { useState } from "react";
+import { getDashboardStats, getSchedules, getScheduleShifts, getCollaborators } from "@/lib/schedule.functions";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Users,
   Server,
@@ -62,44 +66,33 @@ function DashboardPage() {
     { name: "Atendimento", value: stats?.totalAtendimento ?? 0, fill: "var(--color-chart-3)" },
   ];
 
+  const fetchCollabs = useServerFn(getCollaborators);
+  const { data: allCollabs = [] } = useQuery({
+    queryKey: ["collaborators"],
+    queryFn: () => fetchCollabs(),
+  });
+
+  const [teamModal, setTeamModal] = useState<null | "infra" | "sre" | "atendimento">(null);
+  const teamLabel: Record<string, string> = { infra: "Infra", sre: "SRE", atendimento: "Atendimento" };
+
   const statCards = [
     {
       title: "Total Colaboradores",
       value: stats?.totalCollaborators ?? 0,
       icon: Users,
       color: "text-primary",
+      team: null as null | "infra" | "sre" | "atendimento",
     },
-    {
-      title: "Infra",
-      value: stats?.totalInfra ?? 0,
-      icon: Server,
-      color: "text-chart-1",
-    },
-    {
-      title: "SRE",
-      value: stats?.totalSre ?? 0,
-      icon: Briefcase,
-      color: "text-chart-2",
-    },
-    {
-      title: "Atendimento",
-      value: stats?.totalAtendimento ?? 0,
-      icon: Headphones,
-      color: "text-chart-3",
-    },
-    {
-      title: "Em Férias",
-      value: stats?.onVacation ?? 0,
-      icon: Umbrella,
-      color: "text-chart-4",
-    },
-    {
-      title: "Afastados",
-      value: stats?.onLeave ?? 0,
-      icon: Stethoscope,
-      color: "text-chart-5",
-    },
+    { title: "Infra", value: stats?.totalInfra ?? 0, icon: Server, color: "text-chart-1", team: "infra" as const },
+    { title: "SRE", value: stats?.totalSre ?? 0, icon: Briefcase, color: "text-chart-2", team: "sre" as const },
+    { title: "Atendimento", value: stats?.totalAtendimento ?? 0, icon: Headphones, color: "text-chart-3", team: "atendimento" as const },
+    { title: "Em Férias", value: stats?.onVacation ?? 0, icon: Umbrella, color: "text-chart-4", team: null },
+    { title: "Afastados", value: stats?.onLeave ?? 0, icon: Stethoscope, color: "text-chart-5", team: null },
   ];
+
+  const teamCollabs = teamModal
+    ? (allCollabs as any[]).filter((c) => c.team === teamModal)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -114,10 +107,16 @@ function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((card) => {
           const Icon = card.icon;
+          const clickable = !!card.team;
+          const Comp: any = clickable ? "button" : "div";
           return (
-            <div
+            <Comp
               key={card.title}
-              className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
+              type={clickable ? "button" : undefined}
+              onClick={clickable ? () => setTeamModal(card.team!) : undefined}
+              className={`text-left rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 ${
+                clickable ? "cursor-pointer hover:bg-accent/40" : ""
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`${card.color}`}>
@@ -128,7 +127,7 @@ function DashboardPage() {
                   <p className="text-xl font-bold">{card.value}</p>
                 </div>
               </div>
-            </div>
+            </Comp>
           );
         })}
       </div>
@@ -232,6 +231,31 @@ function DashboardPage() {
           </div>
         </div>
       )}
+
+      <Dialog open={!!teamModal} onOpenChange={(o) => !o && setTeamModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Colaboradores — Time {teamModal ? teamLabel[teamModal] : ""}</DialogTitle>
+            <DialogDescription>Lista de colaboradores pertencentes ao time selecionado.</DialogDescription>
+          </DialogHeader>
+          {teamCollabs.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Nenhum colaborador encontrado para este time.
+            </p>
+          ) : (
+            <div className="max-h-96 space-y-2 overflow-y-auto">
+              {teamCollabs.map((c: any) => (
+                <div key={c.id} className="rounded-lg border border-border p-3">
+                  <p className="text-sm font-medium">{c.full_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.email || "sem e-mail"} · {c.whatsapp || "sem WhatsApp"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

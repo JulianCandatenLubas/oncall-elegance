@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/acessos")({
   component: AcessosPage,
 });
 
-type Perfil = "editor" | "visualizador";
+type Perfil = "admin" | "editor" | "visualizador";
 type AccessUser = {
   id: string;
   full_name: string;
@@ -101,7 +101,7 @@ function AcessosPage() {
   const inviteMut = useMutation({
     mutationFn: (data: any) => inviteFn({ data }),
     onSuccess: (_res, vars: any) => {
-      toast.success(`Convite enviado com sucesso para ${vars.email}`);
+      toast.success(`Convite criado para ${vars.email}. Senha inicial: 123456`);
       setDialogOpen(false);
       refresh();
     },
@@ -117,7 +117,7 @@ function AcessosPage() {
   const deleteMut = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => {
-      toast.success("Usuário excluído");
+      toast.success("Cadastro excluído com sucesso");
       setToDelete(null);
       refresh();
     },
@@ -163,7 +163,7 @@ function AcessosPage() {
     setForm({
       full_name: user.full_name,
       email: user.email ?? "",
-      role: (user.role === "admin" ? "editor" : (user.role as Perfil)) || "visualizador",
+      role: (user.role as Perfil) || "visualizador",
       whatsapp: user.whatsapp ?? "",
       is_collaborator: user.is_collaborator ? "yes" : "no",
     });
@@ -197,7 +197,6 @@ function AcessosPage() {
         role: form.role,
         whatsapp,
         is_collaborator,
-        redirect_to: `${window.location.origin}/definir-senha`,
       });
     }
   }
@@ -362,7 +361,7 @@ function AcessosPage() {
             <DialogDescription>
               {editing
                 ? "Atualize as informações do usuário."
-                : "Será enviado um e-mail com link para o usuário definir a senha (expira em 48h)."}
+                : "A senha inicial será 123456. Oriente o usuário a alterá-la no primeiro acesso pela tela Alterar Senha."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -409,6 +408,9 @@ function AcessosPage() {
                   </SelectItem>
                   <SelectItem value="editor">
                     Editor — pode criar e editar escalas
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    Admin — acesso total à plataforma
                   </SelectItem>
                 </SelectContent>
               </Select>

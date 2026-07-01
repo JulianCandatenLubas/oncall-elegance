@@ -35,7 +35,12 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 
 const collaboratorSchema = z.object({
   full_name: z.string().min(2, "Nome obrigatório"),
-  email: z.string().email("E-mail inválido"),
+  email: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine((v) => !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "E-mail inválido"),
   team: z.enum(["infra", "sre", "atendimento"]),
   status: z.enum(["active", "inactive"]),
 });
@@ -108,16 +113,17 @@ function ColaboradoresPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collaborators"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Colaborador removido com sucesso");
+      toast.success("Cadastro excluído com sucesso");
     },
     onError: (err: any) => toast.error(err.message || "Erro ao remover"),
   });
 
   function onSubmit(data: CollaboratorForm) {
+    const payload = { ...data, email: data.email ? data.email : undefined };
     if (editing) {
-      updateMutation.mutate({ data: { id: editing.id, ...data } });
+      updateMutation.mutate({ data: { id: editing.id, ...payload } as any });
     } else {
-      createMutation.mutate({ data });
+      createMutation.mutate({ data: payload as any });
     }
   }
 
@@ -249,8 +255,8 @@ function ColaboradoresPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>E-mail</Label>
-              <Input type="email" {...form.register("email")} />
+              <Label>E-mail (opcional)</Label>
+              <Input type="email" placeholder="opcional" {...form.register("email")} />
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
