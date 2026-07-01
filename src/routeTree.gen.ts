@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
 import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
+import { Route as AuthenticatedAlterarSenhaRouteImport } from './routes/_authenticated.alterar-senha'
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated.acessos'
 
 const DefinirSenhaRoute = DefinirSenhaRouteImport.update({
@@ -65,6 +66,12 @@ const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
   path: '/auditoria',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAlterarSenhaRoute =
+  AuthenticatedAlterarSenhaRouteImport.update({
+    id: '/alterar-senha',
+    path: '/alterar-senha',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
   id: '/acessos',
   path: '/acessos',
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/acessos': typeof AuthenticatedAcessosRoute
+  '/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -87,6 +95,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/acessos': typeof AuthenticatedAcessosRoute
+  '/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -100,6 +109,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/definir-senha': typeof DefinirSenhaRoute
   '/_authenticated/acessos': typeof AuthenticatedAcessosRoute
+  '/_authenticated/alterar-senha': typeof AuthenticatedAlterarSenhaRoute
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/ausencias': typeof AuthenticatedAusenciasRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definir-senha'
     | '/acessos'
+    | '/alterar-senha'
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definir-senha'
     | '/acessos'
+    | '/alterar-senha'
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/definir-senha'
     | '/_authenticated/acessos'
+    | '/_authenticated/alterar-senha'
     | '/_authenticated/auditoria'
     | '/_authenticated/ausencias'
     | '/_authenticated/colaboradores'
@@ -215,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/alterar-senha': {
+      id: '/_authenticated/alterar-senha'
+      path: '/alterar-senha'
+      fullPath: '/alterar-senha'
+      preLoaderRoute: typeof AuthenticatedAlterarSenhaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/acessos': {
       id: '/_authenticated/acessos'
       path: '/acessos'
@@ -227,6 +247,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAcessosRoute: typeof AuthenticatedAcessosRoute
+  AuthenticatedAlterarSenhaRoute: typeof AuthenticatedAlterarSenhaRoute
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedAusenciasRoute: typeof AuthenticatedAusenciasRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
@@ -236,6 +257,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcessosRoute: AuthenticatedAcessosRoute,
+  AuthenticatedAlterarSenhaRoute: AuthenticatedAlterarSenhaRoute,
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedAusenciasRoute: AuthenticatedAusenciasRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
