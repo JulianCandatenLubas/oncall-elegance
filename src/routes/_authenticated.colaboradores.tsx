@@ -35,7 +35,12 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 
 const collaboratorSchema = z.object({
   full_name: z.string().min(2, "Nome obrigatório"),
-  email: z.string().email("E-mail inválido"),
+  email: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine((v) => !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "E-mail inválido"),
   team: z.enum(["infra", "sre", "atendimento"]),
   status: z.enum(["active", "inactive"]),
 });

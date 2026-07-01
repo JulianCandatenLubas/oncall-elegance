@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated.escalas'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedCondicoesEspeciaisRouteImport } from './routes/_authenticated.condicoes-especiais'
 import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
 import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
 import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
@@ -50,6 +51,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCondicoesEspeciaisRoute =
+  AuthenticatedCondicoesEspeciaisRouteImport.update({
+    id: '/condicoes-especiais',
+    path: '/condicoes-especiais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedColaboradoresRoute =
   AuthenticatedColaboradoresRouteImport.update({
     id: '/colaboradores',
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/escalas': typeof AuthenticatedEscalasRoute
 }
@@ -99,6 +107,7 @@ export interface FileRoutesByTo {
   '/auditoria': typeof AuthenticatedAuditoriaRoute
   '/ausencias': typeof AuthenticatedAusenciasRoute
   '/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/escalas': typeof AuthenticatedEscalasRoute
 }
@@ -113,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
   '/_authenticated/ausencias': typeof AuthenticatedAusenciasRoute
   '/_authenticated/colaboradores': typeof AuthenticatedColaboradoresRoute
+  '/_authenticated/condicoes-especiais': typeof AuthenticatedCondicoesEspeciaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/escalas': typeof AuthenticatedEscalasRoute
 }
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
+    | '/condicoes-especiais'
     | '/dashboard'
     | '/escalas'
   fileRoutesByTo: FileRoutesByTo
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/auditoria'
     | '/ausencias'
     | '/colaboradores'
+    | '/condicoes-especiais'
     | '/dashboard'
     | '/escalas'
   id:
@@ -152,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/auditoria'
     | '/_authenticated/ausencias'
     | '/_authenticated/colaboradores'
+    | '/_authenticated/condicoes-especiais'
     | '/_authenticated/dashboard'
     | '/_authenticated/escalas'
   fileRoutesById: FileRoutesById
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/condicoes-especiais': {
+      id: '/_authenticated/condicoes-especiais'
+      path: '/condicoes-especiais'
+      fullPath: '/condicoes-especiais'
+      preLoaderRoute: typeof AuthenticatedCondicoesEspeciaisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/colaboradores': {
       id: '/_authenticated/colaboradores'
       path: '/colaboradores'
@@ -251,6 +271,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
   AuthenticatedAusenciasRoute: typeof AuthenticatedAusenciasRoute
   AuthenticatedColaboradoresRoute: typeof AuthenticatedColaboradoresRoute
+  AuthenticatedCondicoesEspeciaisRoute: typeof AuthenticatedCondicoesEspeciaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEscalasRoute: typeof AuthenticatedEscalasRoute
 }
@@ -261,6 +282,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
   AuthenticatedAusenciasRoute: AuthenticatedAusenciasRoute,
   AuthenticatedColaboradoresRoute: AuthenticatedColaboradoresRoute,
+  AuthenticatedCondicoesEspeciaisRoute: AuthenticatedCondicoesEspeciaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEscalasRoute: AuthenticatedEscalasRoute,
 }
