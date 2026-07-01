@@ -211,8 +211,28 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const { data: absences, error: absError } = await admin.from("absences").select("*");
     if (absError) throw absError;
 
+    const { data: restrictions, error: restError } = await admin
+      .from("collaborator_restrictions")
+      .select("collaborator_id, type, weekdays, start_date, end_date");
+    if (restError) throw restError;
+
+    const { data: priorities, error: prioError } = await admin
+      .from("collaborator_priorities")
+      .select("collaborator_id, weekdays, level");
+    if (prioError) throw prioError;
+
     const start = new Date(data.start_date);
     const end = new Date(data.end_date);
+
+    const { generateShiftsDetailed } = await import("./schedule.utils");
+    const result = generateShiftsDetailed(
+      start,
+      end,
+      collaborators ?? [],
+      absences ?? [],
+      (restrictions ?? []) as any,
+      (priorities ?? []) as any,
+    );
 
     const { data: schedule, error: schedError } = await admin
       .from("schedules")
@@ -226,9 +246,7 @@ export const generateSchedule = createServerFn({ method: "POST" })
       .single();
     if (schedError) throw schedError;
 
-    const shifts = generateShifts(start, end, collaborators ?? [], absences ?? []);
-
-    const shiftInserts = shifts.map((s) => ({
+    const shiftInserts = result.shifts.map((s: any) => ({
       schedule_id: schedule.id,
       shift_date: s.date,
       day_type: s.dayType,
@@ -243,7 +261,7 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const { error: shiftError } = await admin.from("schedule_shifts").insert(shiftInserts);
     if (shiftError) throw shiftError;
 
-    return schedule;
+    return { ...schedule, hasConsecutiveConflict: result.hasConsecutiveConflict };
   });
 
 export const deleteSchedule = createServerFn({ method: "POST" })
