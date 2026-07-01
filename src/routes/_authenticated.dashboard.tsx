@@ -66,44 +66,33 @@ function DashboardPage() {
     { name: "Atendimento", value: stats?.totalAtendimento ?? 0, fill: "var(--color-chart-3)" },
   ];
 
+  const fetchCollabs = useServerFn(getCollaborators);
+  const { data: allCollabs = [] } = useQuery({
+    queryKey: ["collaborators"],
+    queryFn: () => fetchCollabs(),
+  });
+
+  const [teamModal, setTeamModal] = useState<null | "infra" | "sre" | "atendimento">(null);
+  const teamLabel: Record<string, string> = { infra: "Infra", sre: "SRE", atendimento: "Atendimento" };
+
   const statCards = [
     {
       title: "Total Colaboradores",
       value: stats?.totalCollaborators ?? 0,
       icon: Users,
       color: "text-primary",
+      team: null as null | "infra" | "sre" | "atendimento",
     },
-    {
-      title: "Infra",
-      value: stats?.totalInfra ?? 0,
-      icon: Server,
-      color: "text-chart-1",
-    },
-    {
-      title: "SRE",
-      value: stats?.totalSre ?? 0,
-      icon: Briefcase,
-      color: "text-chart-2",
-    },
-    {
-      title: "Atendimento",
-      value: stats?.totalAtendimento ?? 0,
-      icon: Headphones,
-      color: "text-chart-3",
-    },
-    {
-      title: "Em Férias",
-      value: stats?.onVacation ?? 0,
-      icon: Umbrella,
-      color: "text-chart-4",
-    },
-    {
-      title: "Afastados",
-      value: stats?.onLeave ?? 0,
-      icon: Stethoscope,
-      color: "text-chart-5",
-    },
+    { title: "Infra", value: stats?.totalInfra ?? 0, icon: Server, color: "text-chart-1", team: "infra" as const },
+    { title: "SRE", value: stats?.totalSre ?? 0, icon: Briefcase, color: "text-chart-2", team: "sre" as const },
+    { title: "Atendimento", value: stats?.totalAtendimento ?? 0, icon: Headphones, color: "text-chart-3", team: "atendimento" as const },
+    { title: "Em Férias", value: stats?.onVacation ?? 0, icon: Umbrella, color: "text-chart-4", team: null },
+    { title: "Afastados", value: stats?.onLeave ?? 0, icon: Stethoscope, color: "text-chart-5", team: null },
   ];
+
+  const teamCollabs = teamModal
+    ? (allCollabs as any[]).filter((c) => c.team === teamModal)
+    : [];
 
   return (
     <div className="space-y-6">
