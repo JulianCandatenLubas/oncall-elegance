@@ -107,10 +107,16 @@ function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((card) => {
           const Icon = card.icon;
+          const clickable = !!card.team;
+          const Comp: any = clickable ? "button" : "div";
           return (
-            <div
+            <Comp
               key={card.title}
-              className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
+              type={clickable ? "button" : undefined}
+              onClick={clickable ? () => setTeamModal(card.team!) : undefined}
+              className={`text-left rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 ${
+                clickable ? "cursor-pointer hover:bg-accent/40" : ""
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`${card.color}`}>
@@ -121,7 +127,7 @@ function DashboardPage() {
                   <p className="text-xl font-bold">{card.value}</p>
                 </div>
               </div>
-            </div>
+            </Comp>
           );
         })}
       </div>
