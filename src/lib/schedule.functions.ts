@@ -63,7 +63,7 @@ export const createCollaborator = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       full_name: z.string().min(2).max(200),
-      email: z.string().email().max(200),
+      email: z.string().email().max(200).optional().nullable(),
       team: collaboratorTeam,
       status: collaboratorStatus,
     }).parse,
@@ -73,7 +73,7 @@ export const createCollaborator = createServerFn({ method: "POST" })
     const admin = await getAdmin();
     const { data: result, error } = await admin
       .from("collaborators")
-      .insert({ full_name: data.full_name, email: data.email, team: data.team, status: data.status })
+      .insert({ full_name: data.full_name, email: data.email ?? null, team: data.team, status: data.status })
       .select()
       .single();
     if (error) throw error;
@@ -86,7 +86,7 @@ export const updateCollaborator = createServerFn({ method: "POST" })
     z.object({
       id: uuid,
       full_name: z.string().min(2).max(200).optional(),
-      email: z.string().email().max(200).optional(),
+      email: z.string().email().max(200).optional().nullable(),
       team: collaboratorTeam.optional(),
       status: collaboratorStatus.optional(),
     }).parse,
