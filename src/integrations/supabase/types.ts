@@ -91,10 +91,89 @@ export type Database = {
         }
         Relationships: []
       }
+      collaborator_priorities: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          level: Database["public"]["Enums"]["priority_level"]
+          updated_at: string
+          weekdays: number[]
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          id?: string
+          level: Database["public"]["Enums"]["priority_level"]
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          id?: string
+          level?: Database["public"]["Enums"]["priority_level"]
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborator_priorities_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaborator_restrictions: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string | null
+          type: Database["public"]["Enums"]["restriction_type"]
+          updated_at: string
+          weekdays: number[]
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          type: Database["public"]["Enums"]["restriction_type"]
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          type?: Database["public"]["Enums"]["restriction_type"]
+          updated_at?: string
+          weekdays?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborator_restrictions_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaborators: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           full_name: string
           id: string
           status: Database["public"]["Enums"]["collaborator_status"]
@@ -103,7 +182,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           full_name: string
           id?: string
           status?: Database["public"]["Enums"]["collaborator_status"]
@@ -112,7 +191,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           full_name?: string
           id?: string
           status?: Database["public"]["Enums"]["collaborator_status"]
@@ -314,6 +393,8 @@ export type Database = {
       app_role: "admin" | "gestor" | "visualizador" | "editor"
       collaborator_status: "active" | "inactive"
       day_type: "dia_util" | "fim_de_semana" | "feriado"
+      priority_level: "alta" | "media" | "baixa"
+      restriction_type: "weekdays" | "weekends" | "holidays"
       schedule_status: "draft" | "published"
       shift_type: "diurno" | "noturno"
       team: "infra" | "sre" | "atendimento"
@@ -456,6 +537,8 @@ export const Constants = {
       app_role: ["admin", "gestor", "visualizador", "editor"],
       collaborator_status: ["active", "inactive"],
       day_type: ["dia_util", "fim_de_semana", "feriado"],
+      priority_level: ["alta", "media", "baixa"],
+      restriction_type: ["weekdays", "weekends", "holidays"],
       schedule_status: ["draft", "published"],
       shift_type: ["diurno", "noturno"],
       team: ["infra", "sre", "atendimento"],
