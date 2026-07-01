@@ -98,8 +98,14 @@ function EscalasPage() {
   const generateMut = useMutation({
     mutationFn: (vars: { start_date: string; end_date: string }) =>
       generateFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Escala gerada com sucesso");
+    onSuccess: (res: any) => {
+      if (res?.hasConsecutiveConflict) {
+        toast.warning(
+          "Não foi possível escalar todos os dias sem conflito de dias consecutivos. Revise as condições especiais ou o quadro de colaboradores.",
+        );
+      } else {
+        toast.success("Escala gerada com sucesso");
+      }
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setGenerateOpen(false);
