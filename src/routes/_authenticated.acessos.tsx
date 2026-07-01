@@ -101,7 +101,7 @@ function AcessosPage() {
   const inviteMut = useMutation({
     mutationFn: (data: any) => inviteFn({ data }),
     onSuccess: (_res, vars: any) => {
-      toast.success(`Convite enviado com sucesso para ${vars.email}`);
+      toast.success(`Convite criado para ${vars.email}. Senha inicial: 123456`);
       setDialogOpen(false);
       refresh();
     },
@@ -361,7 +361,7 @@ function AcessosPage() {
             <DialogDescription>
               {editing
                 ? "Atualize as informações do usuário."
-                : "Será enviado um e-mail com link para o usuário definir a senha (expira em 48h)."}
+                : "A senha inicial será 123456. Oriente o usuário a alterá-la no primeiro acesso pela tela Alterar Senha."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
