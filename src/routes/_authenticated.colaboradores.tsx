@@ -147,10 +147,37 @@ function ColaboradoresPage() {
     setIsDialogOpen(true);
   }
 
-  const filtered = collaborators?.filter((c: any) =>
-    c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.email?.toLowerCase?.().includes(search.toLowerCase()) ?? false)
-  );
+  const teamOrder: Record<string, number> = { infra: 1, sre: 2, atendimento: 3 };
+  const filtered = (collaborators ?? [])
+    .filter((c: any) => {
+      const q = search.toLowerCase().trim();
+      if (q && !c.full_name.toLowerCase().includes(q) && !(c.email?.toLowerCase?.().includes(q) ?? false)) {
+        return false;
+      }
+      if (statusFilter !== "all" && c.status !== statusFilter) return false;
+      if (teamFilter !== "all" && c.team !== teamFilter) return false;
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      switch (sortBy) {
+        case "name_desc":
+          return b.full_name.localeCompare(a.full_name);
+        case "team":
+          return (teamOrder[a.team] ?? 99) - (teamOrder[b.team] ?? 99) || a.full_name.localeCompare(b.full_name);
+        case "status":
+          return a.status.localeCompare(b.status) || a.full_name.localeCompare(b.full_name);
+        case "name_asc":
+        default:
+          return a.full_name.localeCompare(b.full_name);
+      }
+    });
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setTeamFilter("all");
+    setSortBy("name_asc");
+  }
 
   return (
     <div className="space-y-6">
@@ -169,15 +196,48 @@ function ColaboradoresPage() {
         )}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome ou e-mail..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      <div className="grid gap-3 md:grid-cols-[1fr_180px_180px_180px_auto]">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome ou e-mail..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="inactive">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={teamFilter} onValueChange={(v) => setTeamFilter(v as any)}>
+          <SelectTrigger><SelectValue placeholder="Time" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os times</SelectItem>
+            <SelectItem value="infra">Infra</SelectItem>
+            <SelectItem value="sre">SRE</SelectItem>
+            <SelectItem value="atendimento">Atendimento</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+          <SelectTrigger><SelectValue placeholder="Ordenar" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name_asc">Nome (A–Z)</SelectItem>
+            <SelectItem value="name_desc">Nome (Z–A)</SelectItem>
+            <SelectItem value="team">Time</SelectItem>
+            <SelectItem value="status">Status</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={clearFilters}>Limpar filtros</Button>
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        {filtered.length} colaborador{filtered.length === 1 ? "" : "es"} encontrado{filtered.length === 1 ? "" : "s"}
+      </p>
 
       <div className="rounded-xl border border-border bg-card">
         <div className="overflow-x-auto">
