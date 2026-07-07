@@ -69,6 +69,8 @@ function EscalasPage() {
     d.setDate(0);
     return format(d, "yyyy-MM-dd");
   });
+  const [scope, setScope] = useState<"all" | "team">("all");
+  const [scopeTeam, setScopeTeam] = useState<"infra" | "sre" | "atendimento">("infra");
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
