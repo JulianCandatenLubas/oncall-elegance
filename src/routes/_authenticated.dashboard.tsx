@@ -60,11 +60,21 @@ function DashboardPage() {
     ?.filter((s: any) => s.shift_date >= today)
     .slice(0, 5);
 
-  const teamChartData = [
-    { name: "Infra", value: stats?.totalInfra ?? 0, fill: "var(--color-chart-1)" },
-    { name: "SRE", value: stats?.totalSre ?? 0, fill: "var(--color-chart-2)" },
-    { name: "Atendimento", value: stats?.totalAtendimento ?? 0, fill: "var(--color-chart-3)" },
-  ];
+  const now = new Date();
+  const [monthKey, setMonthKey] = useState(format(now, "yyyy-MM"));
+  const [monthYear, monthMonth] = monthKey.split("-").map(Number);
+  const fetchShiftsByCollab = useServerFn(getShiftsByCollaboratorMonth);
+  const { data: shiftsByCollab } = useQuery({
+    queryKey: ["shifts-by-collab", monthYear, monthMonth],
+    queryFn: () => fetchShiftsByCollab({ data: { year: monthYear, month: monthMonth } }),
+  });
+
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM 'de' yyyy", { locale: ptBR }) };
+  });
+
+  const teamLabelMap: Record<string, string> = { infra: "Infra", sre: "SRE", atendimento: "Atendimento" };
 
   const fetchCollabs = useServerFn(getCollaborators);
   const { data: allCollabs = [] } = useQuery({
