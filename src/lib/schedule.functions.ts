@@ -197,7 +197,13 @@ export const getScheduleShifts = createServerFn({ method: "GET" })
 
 export const generateSchedule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ start_date: isoDate, end_date: isoDate }).parse)
+  .inputValidator(
+    z.object({
+      start_date: isoDate,
+      end_date: isoDate,
+      team: z.enum(["all", "infra", "sre", "atendimento"]).optional().default("all"),
+    }).parse,
+  )
   .handler(async ({ data, context }) => {
     await assertPrivileged(context.supabase, context.userId);
     const admin = await getAdmin();
@@ -234,6 +240,10 @@ export const generateSchedule = createServerFn({ method: "POST" })
       (priorities ?? []) as any,
     );
 
+    const teamScope = data.team ?? "all";
+    const teamsGenerated =
+      teamScope === "all" ? ["infra", "sre", "atendimento"] : [teamScope];
+
     const { data: schedule, error: schedError } = await admin
       .from("schedules")
       .insert({
@@ -253,15 +263,19 @@ export const generateSchedule = createServerFn({ method: "POST" })
       shift_type: s.shiftType,
       start_time: s.startTime,
       end_time: s.endTime,
-      infra_collaborator_id: s.infra,
-      sre_collaborator_id: s.sre,
-      atendimento_collaborator_id: s.atendimento,
+      infra_collaborator_id: teamsGenerated.includes("infra") ? s.infra : null,
+      sre_collaborator_id: teamsGenerated.includes("sre") ? s.sre : null,
+      atendimento_collaborator_id: teamsGenerated.includes("atendimento") ? s.atendimento : null,
     }));
 
     const { error: shiftError } = await admin.from("schedule_shifts").insert(shiftInserts);
     if (shiftError) throw shiftError;
 
-    return { ...schedule, hasConsecutiveConflict: result.hasConsecutiveConflict };
+    return {
+      ...schedule,
+      hasConsecutiveConflict: result.hasConsecutiveConflict,
+      teamsGenerated,
+    };
   });
 
 export const deleteSchedule = createServerFn({ method: "POST" })
