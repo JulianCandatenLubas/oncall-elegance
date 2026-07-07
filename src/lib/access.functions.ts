@@ -147,7 +147,7 @@ export const updateAccessUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: UpdateInput) => d)
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertAdminOrEditor(context);
     if (data.id === ADMIN_ID) throw new Error("Conta protegida");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = {};
