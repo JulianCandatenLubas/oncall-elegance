@@ -54,6 +54,9 @@ export const Route = createFileRoute("/_authenticated/colaboradores")({
 function ColaboradoresPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [teamFilter, setTeamFilter] = useState<"all" | "infra" | "sre" | "atendimento">("all");
+  const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "team" | "status">("name_asc");
   const [editing, setEditing] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
