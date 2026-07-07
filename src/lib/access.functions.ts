@@ -48,7 +48,7 @@ async function syncCollaboratorFromAccess(
 export const listAccessUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertAdminOrEditor(context);
     const { data, error } = await context.supabase
       .from("profiles")
       .select("id, full_name, email, role, whatsapp, is_collaborator, active, created_at")
