@@ -437,3 +437,57 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       currentMonthSchedule,
     };
   });
+
+export const getShiftsByCollaboratorMonth = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      year: z.number().int(),
+      month: z.number().int().min(1).max(12),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    await assertPrivileged(context.supabase, context.userId);
+    const admin = await getAdmin();
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const start = `${data.year}-${pad(data.month)}-01`;
+    const endDate = new Date(data.year, data.month, 0);
+    const end = `${data.year}-${pad(data.month)}-${pad(endDate.getDate())}`;
+
+    const { data: shifts, error } = await admin
+      .from("schedule_shifts")
+      .select("infra_collaborator_id, sre_collaborator_id, atendimento_collaborator_id, shift_date")
+      .gte("shift_date", start)
+      .lte("shift_date", end);
+    if (error) throw error;
+
+    const { data: collabs, error: cErr } = await admin
+      .from("collaborators")
+      .select("id, full_name, team");
+    if (cErr) throw cErr;
+
+    const countMap = new Map<string, number>();
+    for (const s of shifts ?? []) {
+      for (const key of [
+        "infra_collaborator_id",
+        "sre_collaborator_id",
+        "atendimento_collaborator_id",
+      ] as const) {
+        const id = (s as any)[key];
+        if (id) countMap.set(id, (countMap.get(id) ?? 0) + 1);
+      }
+    }
+
+    const results = (collabs ?? [])
+      .map((c: any) => ({
+        id: c.id,
+        full_name: c.full_name,
+        team: c.team,
+        count: countMap.get(c.id) ?? 0,
+      }))
+      .filter((r) => r.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    return { collaborators: results, totalShifts: shifts?.length ?? 0 };
+  });
