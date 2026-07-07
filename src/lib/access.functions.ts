@@ -12,6 +12,19 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso negado");
 }
 
+async function assertAdminOrEditor(ctx: { supabase: any; userId: string }) {
+  const { data: prof, error } = await ctx.supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", ctx.userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const role = prof?.role;
+  if (role !== "admin" && role !== "editor" && role !== "gestor") {
+    throw new Error("Acesso negado");
+  }
+}
+
 async function syncCollaboratorFromAccess(
   admin: any,
   payload: { full_name: string; email: string },
