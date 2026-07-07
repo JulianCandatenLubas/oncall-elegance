@@ -2,12 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { getDashboardStats, getSchedules, getScheduleShifts, getCollaborators } from "@/lib/schedule.functions";
+import {
+  getDashboardStats,
+  getSchedules,
+  getScheduleShifts,
+  getCollaborators,
+  getShiftsByCollaboratorMonth,
+} from "@/lib/schedule.functions";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Users,
   Server,
@@ -18,15 +27,6 @@ import {
   CalendarDays,
   Clock,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -60,11 +60,21 @@ function DashboardPage() {
     ?.filter((s: any) => s.shift_date >= today)
     .slice(0, 5);
 
-  const teamChartData = [
-    { name: "Infra", value: stats?.totalInfra ?? 0, fill: "var(--color-chart-1)" },
-    { name: "SRE", value: stats?.totalSre ?? 0, fill: "var(--color-chart-2)" },
-    { name: "Atendimento", value: stats?.totalAtendimento ?? 0, fill: "var(--color-chart-3)" },
-  ];
+  const now = new Date();
+  const [monthKey, setMonthKey] = useState(format(now, "yyyy-MM"));
+  const [monthYear, monthMonth] = monthKey.split("-").map(Number);
+  const fetchShiftsByCollab = useServerFn(getShiftsByCollaboratorMonth);
+  const { data: shiftsByCollab } = useQuery({
+    queryKey: ["shifts-by-collab", monthYear, monthMonth],
+    queryFn: () => fetchShiftsByCollab({ data: { year: monthYear, month: monthMonth } }),
+  });
+
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM 'de' yyyy", { locale: ptBR }) };
+  });
+
+  const teamLabelMap: Record<string, string> = { infra: "Infra", sre: "SRE", atendimento: "Atendimento" };
 
   const fetchCollabs = useServerFn(getCollaborators);
   const { data: allCollabs = [] } = useQuery({
@@ -133,26 +143,55 @@ function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Team Chart */}
+        {/* Shifts per collaborator */}
         <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="mb-4 text-sm font-semibold">Distribuição por Time</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={teamChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="name" stroke="var(--color-muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold">Plantões por Colaborador</h3>
+            <Select value={monthKey} onValueChange={setMonthKey}>
+              <SelectTrigger className="w-[200px] capitalize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value} className="capitalize">
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {shiftsByCollab && shiftsByCollab.collaborators.length > 0 ? (
+            <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+              {(() => {
+                const maxCount = shiftsByCollab.collaborators[0]?.count ?? 1;
+                return shiftsByCollab.collaborators.map((c) => (
+                  <div key={c.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">
+                        {c.full_name}
+                        <span className="ml-2 text-muted-foreground">
+                          · {teamLabelMap[c.team] ?? c.team}
+                        </span>
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {c.count} plant{c.count === 1 ? "ão" : "ões"}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${Math.max(6, (c.count / maxCount) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhuma escala encontrada para o período selecionado.
+            </p>
+          )}
         </div>
 
         {/* Upcoming shifts */}

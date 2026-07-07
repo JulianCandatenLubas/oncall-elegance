@@ -12,6 +12,19 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso negado");
 }
 
+async function assertAdminOrEditor(ctx: { supabase: any; userId: string }) {
+  const { data: prof, error } = await ctx.supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", ctx.userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const role = prof?.role;
+  if (role !== "admin" && role !== "editor" && role !== "gestor") {
+    throw new Error("Acesso negado");
+  }
+}
+
 async function syncCollaboratorFromAccess(
   admin: any,
   payload: { full_name: string; email: string },
@@ -35,7 +48,7 @@ async function syncCollaboratorFromAccess(
 export const listAccessUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context);
+    await assertAdminOrEditor(context);
     const { data, error } = await context.supabase
       .from("profiles")
       .select("id, full_name, email, role, whatsapp, is_collaborator, active, created_at")
@@ -134,7 +147,7 @@ export const updateAccessUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: UpdateInput) => d)
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertAdminOrEditor(context);
     if (data.id === ADMIN_ID) throw new Error("Conta protegida");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = {};

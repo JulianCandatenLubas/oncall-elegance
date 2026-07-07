@@ -69,6 +69,8 @@ function EscalasPage() {
     d.setDate(0);
     return format(d, "yyyy-MM-dd");
   });
+  const [scope, setScope] = useState<"all" | "team">("all");
+  const [scopeTeam, setScopeTeam] = useState<"infra" | "sre" | "atendimento">("infra");
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -96,15 +98,16 @@ function EscalasPage() {
   });
 
   const generateMut = useMutation({
-    mutationFn: (vars: { start_date: string; end_date: string }) =>
+    mutationFn: (vars: { start_date: string; end_date: string; team: "all" | "infra" | "sre" | "atendimento" }) =>
       generateFn({ data: vars }),
     onSuccess: (res: any) => {
+      const count = res?.teamsGenerated?.length ?? 3;
       if (res?.hasConsecutiveConflict) {
         toast.warning(
           "Não foi possível escalar todos os dias sem conflito de dias consecutivos. Revise as condições especiais ou o quadro de colaboradores.",
         );
       } else {
-        toast.success("Escala gerada com sucesso");
+        toast.success(`Escala gerada com sucesso para ${count} time(s).`);
       }
       queryClient.invalidateQueries({ queryKey: ["schedules"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -359,8 +362,35 @@ function EscalasPage() {
               <Label>Data final</Label>
               <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label>Escopo da geração</Label>
+              <Select value={scope} onValueChange={(v) => setScope(v as "all" | "team")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os times</SelectItem>
+                  <SelectItem value="team">Time específico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {scope === "team" && (
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Select value={scopeTeam} onValueChange={(v) => setScopeTeam(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="infra">Infra</SelectItem>
+                    <SelectItem value="sre">SRE</SelectItem>
+                    <SelectItem value="atendimento">Atendimento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
-              O sistema distribui plantões considerando ausências, feriados nacionais e equilíbrio entre colaboradores.
+              O sistema distribui plantões considerando ausências, feriados nacionais, restrições, prioridades e dias consecutivos.
             </p>
           </div>
           <DialogFooter>
@@ -368,10 +398,20 @@ function EscalasPage() {
               Cancelar
             </Button>
             <Button
-              onClick={() => generateMut.mutate({ start_date: start, end_date: end })}
+              onClick={() =>
+                generateMut.mutate({
+                  start_date: start,
+                  end_date: end,
+                  team: scope === "all" ? "all" : scopeTeam,
+                })
+              }
               disabled={generateMut.isPending}
             >
-              {generateMut.isPending ? "Gerando..." : "Gerar"}
+              {generateMut.isPending
+                ? scope === "all"
+                  ? "Gerando para todos os times..."
+                  : "Gerando..."
+                : "Gerar"}
             </Button>
           </DialogFooter>
         </DialogContent>
