@@ -362,8 +362,35 @@ function EscalasPage() {
               <Label>Data final</Label>
               <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label>Escopo da geração</Label>
+              <Select value={scope} onValueChange={(v) => setScope(v as "all" | "team")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os times</SelectItem>
+                  <SelectItem value="team">Time específico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {scope === "team" && (
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Select value={scopeTeam} onValueChange={(v) => setScopeTeam(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="infra">Infra</SelectItem>
+                    <SelectItem value="sre">SRE</SelectItem>
+                    <SelectItem value="atendimento">Atendimento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
-              O sistema distribui plantões considerando ausências, feriados nacionais e equilíbrio entre colaboradores.
+              O sistema distribui plantões considerando ausências, feriados nacionais, restrições, prioridades e dias consecutivos.
             </p>
           </div>
           <DialogFooter>
@@ -371,10 +398,20 @@ function EscalasPage() {
               Cancelar
             </Button>
             <Button
-              onClick={() => generateMut.mutate({ start_date: start, end_date: end })}
+              onClick={() =>
+                generateMut.mutate({
+                  start_date: start,
+                  end_date: end,
+                  team: scope === "all" ? "all" : scopeTeam,
+                })
+              }
               disabled={generateMut.isPending}
             >
-              {generateMut.isPending ? "Gerando..." : "Gerar"}
+              {generateMut.isPending
+                ? scope === "all"
+                  ? "Gerando para todos os times..."
+                  : "Gerando..."
+                : "Gerar"}
             </Button>
           </DialogFooter>
         </DialogContent>
