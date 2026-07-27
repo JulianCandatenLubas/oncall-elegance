@@ -4,12 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const ADMIN_ID = "d81cd53e-f6c7-4f5d-9bbc-285cf23fcd88";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
-  const { data, error } = await ctx.supabase.rpc("has_app_role", {
-    _user_id: ctx.userId,
-    _role: "admin",
-  });
+  const { data, error } = await ctx.supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", ctx.userId)
+    .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Acesso negado");
+  if (data?.role !== "admin") throw new Error("Acesso negado");
 }
 
 async function assertAdminOrEditor(ctx: { supabase: any; userId: string }) {
