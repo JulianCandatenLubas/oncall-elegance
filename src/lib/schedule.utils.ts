@@ -1,4 +1,4 @@
-import { format, addDays, isWeekend, getYear } from "date-fns";
+import { format, addDays, isWeekend, getYear, startOfWeek } from "date-fns";
 
 export function getBrazilianHolidays(year: number): Array<{ name: string; date: string }> {
   const easter = calculateEaster(year);
