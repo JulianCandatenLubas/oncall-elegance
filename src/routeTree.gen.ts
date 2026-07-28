@@ -9,62 +9,35 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated.escalas'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedCondicoesEspeciaisRouteImport } from './routes/_authenticated.condicoes-especiais'
-import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
-import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
-import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
-import { Route as AuthenticatedAlterarSenhaRouteImport } from './routes/_authenticated.alterar-senha'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAcessosRouteImport } from './routes/_authenticated.acessos'
+import { Route as AuthenticatedAlterarSenhaRouteImport } from './routes/_authenticated.alterar-senha'
+import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated.auditoria'
+import { Route as AuthenticatedAusenciasRouteImport } from './routes/_authenticated.ausencias'
+import { Route as AuthenticatedColaboradoresRouteImport } from './routes/_authenticated.colaboradores'
+import { Route as AuthenticatedCondicoesEspeciaisRouteImport } from './routes/_authenticated.condicoes-especiais'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated.escalas'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
-  id: '/escalas',
-  path: '/escalas',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedCondicoesEspeciaisRoute =
-  AuthenticatedCondicoesEspeciaisRouteImport.update({
-    id: '/condicoes-especiais',
-    path: '/condicoes-especiais',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedColaboradoresRoute =
-  AuthenticatedColaboradoresRouteImport.update({
-    id: '/colaboradores',
-    path: '/colaboradores',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAusenciasRoute = AuthenticatedAusenciasRouteImport.update({
-  id: '/ausencias',
-  path: '/ausencias',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
-  id: '/auditoria',
-  path: '/auditoria',
+const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
+  id: '/acessos',
+  path: '/acessos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAlterarSenhaRoute =
@@ -73,9 +46,36 @@ const AuthenticatedAlterarSenhaRoute =
     path: '/alterar-senha',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAcessosRoute = AuthenticatedAcessosRouteImport.update({
-  id: '/acessos',
-  path: '/acessos',
+const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAusenciasRoute = AuthenticatedAusenciasRouteImport.update({
+  id: '/ausencias',
+  path: '/ausencias',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedColaboradoresRoute =
+  AuthenticatedColaboradoresRouteImport.update({
+    id: '/colaboradores',
+    path: '/colaboradores',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCondicoesEspeciaisRoute =
+  AuthenticatedCondicoesEspeciaisRouteImport.update({
+    id: '/condicoes-especiais',
+    path: '/condicoes-especiais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
+  id: '/escalas',
+  path: '/escalas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
@@ -165,11 +165,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -179,53 +179,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/escalas': {
-      id: '/_authenticated/escalas'
-      path: '/escalas'
-      fullPath: '/escalas'
-      preLoaderRoute: typeof AuthenticatedEscalasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/condicoes-especiais': {
-      id: '/_authenticated/condicoes-especiais'
-      path: '/condicoes-especiais'
-      fullPath: '/condicoes-especiais'
-      preLoaderRoute: typeof AuthenticatedCondicoesEspeciaisRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/colaboradores': {
-      id: '/_authenticated/colaboradores'
-      path: '/colaboradores'
-      fullPath: '/colaboradores'
-      preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/ausencias': {
-      id: '/_authenticated/ausencias'
-      path: '/ausencias'
-      fullPath: '/ausencias'
-      preLoaderRoute: typeof AuthenticatedAusenciasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/auditoria': {
-      id: '/_authenticated/auditoria'
-      path: '/auditoria'
-      fullPath: '/auditoria'
-      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+    '/_authenticated/acessos': {
+      id: '/_authenticated/acessos'
+      path: '/acessos'
+      fullPath: '/acessos'
+      preLoaderRoute: typeof AuthenticatedAcessosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/alterar-senha': {
@@ -235,11 +200,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlterarSenhaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/acessos': {
-      id: '/_authenticated/acessos'
-      path: '/acessos'
-      fullPath: '/acessos'
-      preLoaderRoute: typeof AuthenticatedAcessosRouteImport
+    '/_authenticated/auditoria': {
+      id: '/_authenticated/auditoria'
+      path: '/auditoria'
+      fullPath: '/auditoria'
+      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/ausencias': {
+      id: '/_authenticated/ausencias'
+      path: '/ausencias'
+      fullPath: '/ausencias'
+      preLoaderRoute: typeof AuthenticatedAusenciasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/colaboradores': {
+      id: '/_authenticated/colaboradores'
+      path: '/colaboradores'
+      fullPath: '/colaboradores'
+      preLoaderRoute: typeof AuthenticatedColaboradoresRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/condicoes-especiais': {
+      id: '/_authenticated/condicoes-especiais'
+      path: '/condicoes-especiais'
+      fullPath: '/condicoes-especiais'
+      preLoaderRoute: typeof AuthenticatedCondicoesEspeciaisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/escalas': {
+      id: '/_authenticated/escalas'
+      path: '/escalas'
+      fullPath: '/escalas'
+      preLoaderRoute: typeof AuthenticatedEscalasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
   }
@@ -279,13 +279,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
