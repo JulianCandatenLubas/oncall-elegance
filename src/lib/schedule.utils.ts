@@ -68,9 +68,18 @@ export interface PriorityInput {
   level: "alta" | "media" | "baixa";
 }
 
+/** Histórico persistido de dia da semana + período por colaborador. */
+export interface RotationHistoryInput {
+  collaborator_id: string;
+  weekday: number;
+  shift_type: string;
+  week_start: string; // yyyy-MM-dd (segunda-feira da semana)
+}
+
 export interface GenerateResult {
   shifts: ShiftAssignment[];
   hasConsecutiveConflict: boolean;
+  hasRotationConflict: boolean;
 }
 
 export function generateShifts(
@@ -80,8 +89,10 @@ export function generateShifts(
   absences: Array<{ collaborator_id: string; start_date: string; end_date: string }>,
   restrictions: RestrictionInput[] = [],
   priorities: PriorityInput[] = [],
+  history: RotationHistoryInput[] = [],
 ): ShiftAssignment[] {
-  return generateShiftsDetailed(start, end, collaborators, absences, restrictions, priorities).shifts;
+  return generateShiftsDetailed(start, end, collaborators, absences, restrictions, priorities, history)
+    .shifts;
 }
 
 export function generateShiftsDetailed(
@@ -91,6 +102,7 @@ export function generateShiftsDetailed(
   absences: Array<{ collaborator_id: string; start_date: string; end_date: string }>,
   restrictions: RestrictionInput[] = [],
   priorities: PriorityInput[] = [],
+  history: RotationHistoryInput[] = [],
 ): GenerateResult {
   const year = getYear(start);
   const holidays = getBrazilianHolidays(year);
