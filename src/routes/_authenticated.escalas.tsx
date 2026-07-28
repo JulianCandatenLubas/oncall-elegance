@@ -102,11 +102,20 @@ function EscalasPage() {
       generateFn({ data: vars }),
     onSuccess: (res: any) => {
       const count = res?.teamsGenerated?.length ?? 3;
+      let warned = false;
       if (res?.hasConsecutiveConflict) {
         toast.warning(
           "Não foi possível escalar todos os dias sem conflito de dias consecutivos. Revise as condições especiais ou o quadro de colaboradores.",
         );
-      } else {
+        warned = true;
+      }
+      if (res?.hasRotationConflict) {
+        toast.warning(
+          "Não foi possível evitar repetição de dia e período para todos os colaboradores. Revise o quadro ou as condições especiais.",
+        );
+        warned = true;
+      }
+      if (!warned) {
         toast.success(`Escala gerada com sucesso para ${count} time(s).`);
       }
       queryClient.invalidateQueries({ queryKey: ["schedules"] });

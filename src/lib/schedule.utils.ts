@@ -1,4 +1,4 @@
-import { format, addDays, isWeekend, getYear } from "date-fns";
+import { format, addDays, isWeekend, getYear, startOfWeek } from "date-fns";
 
 export function getBrazilianHolidays(year: number): Array<{ name: string; date: string }> {
   const easter = calculateEaster(year);
@@ -68,9 +68,18 @@ export interface PriorityInput {
   level: "alta" | "media" | "baixa";
 }
 
+/** Histórico persistido de dia da semana + período por colaborador. */
+export interface RotationHistoryInput {
+  collaborator_id: string;
+  weekday: number;
+  shift_type: string;
+  week_start: string; // yyyy-MM-dd (segunda-feira da semana)
+}
+
 export interface GenerateResult {
   shifts: ShiftAssignment[];
   hasConsecutiveConflict: boolean;
+  hasRotationConflict: boolean;
 }
 
 export function generateShifts(
@@ -80,8 +89,10 @@ export function generateShifts(
   absences: Array<{ collaborator_id: string; start_date: string; end_date: string }>,
   restrictions: RestrictionInput[] = [],
   priorities: PriorityInput[] = [],
+  history: RotationHistoryInput[] = [],
 ): ShiftAssignment[] {
-  return generateShiftsDetailed(start, end, collaborators, absences, restrictions, priorities).shifts;
+  return generateShiftsDetailed(start, end, collaborators, absences, restrictions, priorities, history)
+    .shifts;
 }
 
 export function generateShiftsDetailed(
@@ -91,6 +102,7 @@ export function generateShiftsDetailed(
   absences: Array<{ collaborator_id: string; start_date: string; end_date: string }>,
   restrictions: RestrictionInput[] = [],
   priorities: PriorityInput[] = [],
+  history: RotationHistoryInput[] = [],
 ): GenerateResult {
   const year = getYear(start);
   const holidays = getBrazilianHolidays(year);
@@ -141,6 +153,24 @@ export function generateShiftsDetailed(
   const shiftCount = new Map<string, number>();
   const lastAssignedDate = new Map<string, string>();
   let hasConsecutiveConflict = false;
+  let hasRotationConflict = false;
+
+  // Rotatividade: semana -> colaborador -> conjunto de "diaDaSemana|periodo"
+  const weekKey = (date: Date) => format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const rotation = new Map<string, Map<string, Set<string>>>();
+  const markRotation = (week: string, collabId: string, combo: string) => {
+    if (!rotation.has(week)) rotation.set(week, new Map());
+    const byCollab = rotation.get(week)!;
+    if (!byCollab.has(collabId)) byCollab.set(collabId, new Set());
+    byCollab.get(collabId)!.add(combo);
+  };
+  for (const h of history) {
+    markRotation(h.week_start, h.collaborator_id, `${h.weekday}|${h.shift_type}`);
+  }
+  const usedPreviousWeek = (date: Date, collabId: string, combo: string) => {
+    const prevWeek = format(addDays(startOfWeek(date, { weekStartsOn: 1 }), -7), "yyyy-MM-dd");
+    return rotation.get(prevWeek)?.get(collabId)?.has(combo) ?? false;
+  };
 
   for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
     const dateStr = format(d, "yyyy-MM-dd");
@@ -159,8 +189,11 @@ export function generateShiftsDetailed(
 
     const yesterdayStr = format(addDays(d, -1), "yyyy-MM-dd");
     const usedToday = new Set<string>();
+    const currentWeek = weekKey(d);
+    const dow = d.getDay();
 
     for (const shift of dayShifts) {
+      const combo = `${dow}|${shift.type}`;
       const assignment: ShiftAssignment = {
         date: dateStr,
         dayType,
@@ -173,7 +206,8 @@ export function generateShiftsDetailed(
       };
 
       for (const team of ["infra", "sre", "atendimento"] as const) {
-        const candidates = teamMap[team].filter((id) => {
+        // Regras 1 e 2: condições especiais (restrições/ausências) e dias consecutivos.
+        const baseCandidates = teamMap[team].filter((id) => {
           if (usedToday.has(id)) return false;
           if (absenceMap.get(dateStr)?.has(id)) return false;
           if (isRestricted(id, d, dateStr, isWknd, isHol)) return false;
@@ -182,7 +216,19 @@ export function generateShiftsDetailed(
           return true;
         });
 
-        candidates.sort((a, b) => {
+        // Regra 3: rotatividade de dia+período em semanas consecutivas.
+        const rotationCandidates = baseCandidates.filter(
+          (id) => !usedPreviousWeek(d, id, combo),
+        );
+
+        let candidates = rotationCandidates;
+        if (candidates.length === 0 && baseCandidates.length > 0) {
+          candidates = baseCandidates;
+          hasRotationConflict = true;
+        }
+
+        // Regra 4: prioridades de escalonamento.
+        candidates = [...candidates].sort((a, b) => {
           const pa = priorityScore(a, d);
           const pb = priorityScore(b, d);
           if (pa !== pb) return pb - pa;
@@ -198,6 +244,7 @@ export function generateShiftsDetailed(
           shiftCount.set(chosen, (shiftCount.get(chosen) ?? 0) + 1);
           lastAssignedDate.set(chosen, dateStr);
           usedToday.add(chosen);
+          markRotation(currentWeek, chosen, combo);
         } else {
           if (teamMap[team].length > 0) hasConsecutiveConflict = true;
         }
@@ -207,5 +254,5 @@ export function generateShiftsDetailed(
     }
   }
 
-  return { shifts, hasConsecutiveConflict };
+  return { shifts, hasConsecutiveConflict, hasRotationConflict };
 }

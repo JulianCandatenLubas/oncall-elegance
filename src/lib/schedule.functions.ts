@@ -230,6 +230,15 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const start = new Date(data.start_date);
     const end = new Date(data.end_date);
 
+    // Histórico de rotatividade das semanas anteriores ao início do intervalo.
+    const historySince = new Date(start);
+    historySince.setDate(historySince.getDate() - 21);
+    const { data: history, error: histError } = await admin
+      .from("shift_rotation_history")
+      .select("collaborator_id, weekday, shift_type, week_start")
+      .gte("week_start", historySince.toISOString().split("T")[0]);
+    if (histError) throw histError;
+
     const { generateShiftsDetailed } = await import("./schedule.utils");
     const result = generateShiftsDetailed(
       start,
@@ -238,6 +247,7 @@ export const generateSchedule = createServerFn({ method: "POST" })
       absences ?? [],
       (restrictions ?? []) as any,
       (priorities ?? []) as any,
+      (history ?? []) as any,
     );
 
     const teamScope = data.team ?? "all";
@@ -271,9 +281,48 @@ export const generateSchedule = createServerFn({ method: "POST" })
     const { error: shiftError } = await admin.from("schedule_shifts").insert(shiftInserts);
     if (shiftError) throw shiftError;
 
+    // Persiste o histórico de dia da semana + período por colaborador.
+    const mondayOf = (iso: string) => {
+      const d = new Date(iso + "T00:00:00");
+      const dow = d.getDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      d.setDate(d.getDate() + diff);
+      return d.toISOString().split("T")[0];
+    };
+    const historyRows: any[] = [];
+    const seen = new Set<string>();
+    for (const s of result.shifts as any[]) {
+      const weekday = new Date(s.date + "T00:00:00").getDay();
+      const week_start = mondayOf(s.date);
+      for (const team of ["infra", "sre", "atendimento"] as const) {
+        if (!teamsGenerated.includes(team)) continue;
+        const collaboratorId = s[team];
+        if (!collaboratorId) continue;
+        const key = `${collaboratorId}|${weekday}|${s.shiftType}|${week_start}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        historyRows.push({
+          collaborator_id: collaboratorId,
+          team,
+          weekday,
+          shift_type: s.shiftType,
+          week_start,
+          shift_date: s.date,
+          schedule_id: schedule.id,
+        });
+      }
+    }
+    if (historyRows.length > 0) {
+      const { error: histInsertError } = await admin
+        .from("shift_rotation_history")
+        .upsert(historyRows, { onConflict: "collaborator_id,weekday,shift_type,week_start" });
+      if (histInsertError) throw histInsertError;
+    }
+
     return {
       ...schedule,
       hasConsecutiveConflict: result.hasConsecutiveConflict,
+      hasRotationConflict: result.hasRotationConflict,
       teamsGenerated,
     };
   });
