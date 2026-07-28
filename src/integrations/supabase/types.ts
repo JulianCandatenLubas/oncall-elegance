@@ -367,6 +367,60 @@ export type Database = {
         }
         Relationships: []
       }
+      shift_rotation_history: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          schedule_id: string | null
+          shift_date: string
+          shift_type: string
+          team: string
+          updated_at: string
+          week_start: string
+          weekday: number
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          id?: string
+          schedule_id?: string | null
+          shift_date: string
+          shift_type: string
+          team: string
+          updated_at?: string
+          week_start: string
+          weekday: number
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          id?: string
+          schedule_id?: string | null
+          shift_date?: string
+          shift_type?: string
+          team?: string
+          updated_at?: string
+          week_start?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_rotation_history_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_rotation_history_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
